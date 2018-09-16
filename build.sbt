@@ -1,7 +1,7 @@
 import com.typesafe.sbt.SbtMultiJvm.multiJvmSettings
 import com.typesafe.sbt.SbtMultiJvm.MultiJvmKeys.MultiJvm
 
-val akkaVersion = "2.5.15"
+val akkaVersion = "2.5.16"
 
 val `wordcount2` = project
   .in(file("."))
@@ -19,8 +19,8 @@ val `wordcount2` = project
       "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
       "org.scalatest" %% "scalatest" % "3.0.5" % Test),
     fork in run := true,
-    mainClass in (Compile, run) := Some("com.ana3.TransformationApp"),
-    mainClass in assembly := Some("com.ana3.TransformationApp"),
+    mainClass in (Compile, run) := Some("com.ana3.WordCountMain"),
+    mainClass in assembly := Some("com.ana3.WordCountMain"),
     // disable parallel tests
     parallelExecution in Test := false,
     licenses := Seq(("CC0", url("http://creativecommons.org/publicdomain/zero/1.0")))

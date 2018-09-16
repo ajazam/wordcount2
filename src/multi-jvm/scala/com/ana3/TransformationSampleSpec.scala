@@ -29,9 +29,9 @@ object TransformationSampleSpecConfig extends MultiNodeConfig {
     nodeConfig(role) {
       ConfigFactory.parseString(s"""
       # Enable metrics extension in akka-cluster-metrics.
-      akka.extensions=["akka.cluster.metrics.ClusterMetricsExtension"]
+      #akka.extensions=["akka.cluster.metrics.ClusterMetricsExtension"]
       # Sigar native library extract location during tests.
-      akka.cluster.metrics.native-library-extract-folder=target/native/${role.name}
+      #akka.cluster.metrics.native-library-extract-folder=target/native/${role.name}
       """)
     }
   }
