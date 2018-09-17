@@ -16,7 +16,7 @@ public class WordCountMainTest {
     public void setup(){
         main = new WordCountMain();
         ip = "172.16.0.17";
-        config = main.getNewConfig(ip, true);
+        config = main.getUpdatedAkkaConfig(ip, true);
     }
 
     @Test

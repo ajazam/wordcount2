@@ -17,6 +17,7 @@ val `wordcount2` = project
       "com.typesafe.akka" %% "akka-actor" % akkaVersion,
       "com.typesafe.akka" %% "akka-cluster" % akkaVersion,
       "com.typesafe.akka" %% "akka-multi-node-testkit" % akkaVersion,
+      "com.typesafe.akka" %% "akka-testkit" % akkaVersion,
       "org.scalatest" %% "scalatest" % "3.0.5" % Test),
     fork in run := true,
     mainClass in (Compile, run) := Some("com.ana3.WordCountMain"),

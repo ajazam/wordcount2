@@ -1,21 +1,23 @@
 package com.ana3;
 
+import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
+import akka.actor.Props;
 import akka.actor.Terminated;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import com.ana3.actors.FileReader;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import java.io.File;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 public class WordCountMain {
 
     Config getUpdatedAkkaConfig(String hostip, boolean isMaster){
-        Config config = ConfigFactory.load();
-
-        config = ConfigFactory.parseString("akka.remote.artery.canonical.hostname=\"" + hostip + "\"\n" +
+        Config config = ConfigFactory.parseString("akka.remote.artery.canonical.hostname=\"" + hostip + "\"\n" +
                 "akka.remote.netty.tcp.hostname=\"" + hostip + "\"\n").withFallback(ConfigFactory.load());
         return config;
     }
@@ -32,11 +34,18 @@ public class WordCountMain {
 
         Config akkaConfig = main.getUpdatedAkkaConfig(hostip, isMaster);
 
+        String currentdirectory = System.getProperty("user.dir");
+
+        File fileCheck = new File(currentdirectory+"/"+ akkaConfig.getString("file.name"));
+
+        if (!fileCheck.exists()) {
+            System.out.println("Text file is not present");
+            System.exit(0);
+        }
+
         ActorSystem system = ActorSystem.create("WordCountSystem", akkaConfig);
 
         final LoggingAdapter log = Logging.getLogger(system, "main");
-
-        String currentdirectory = System.getProperty("user.dir");
 
         logAkkaConfiguratation(log, "akka.remote.artery.canonical.hostname", akkaConfig);
         logAkkaConfiguratation(log, "akka.remote.netty.tcp.hostname", akkaConfig);
@@ -46,9 +55,11 @@ public class WordCountMain {
         log.info("current directory is "+currentdirectory);
 
         if (isMaster) {
-            log.info("it's a master");
+            log.info("it's a master. Starting up file reader actor");
+            final ActorRef fileReaderActorRef = system.actorOf(
+                    Props.create(FileReader.class), "filereader");
         } else {
-            log.info("ot's a worker");
+            log.info("it's a worker");
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {

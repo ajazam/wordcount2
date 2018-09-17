@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<letter>
+    <title maxlength="10"> Quote Letter </title>
+    <salutation limit="40">Dear Daniel,</salutation>
+    <text>Thank you f or sending us the information on <emphasis>SDL Trados Studio 2009</emphasis>.
+        We like your products and think they certainly represent the most powerful translation solution on the market.
