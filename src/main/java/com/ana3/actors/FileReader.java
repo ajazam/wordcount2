@@ -230,8 +230,6 @@ public class FileReader extends AbstractActor {
 
     @Override
     public Receive createReceive() {
-        List<String> lines = new ArrayList<String>();
-        lines.add("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         return receiveBuilder()
                 .match(ReadyForBatch.class, rb -> {
                     processMessageReadyForBatch(rb);
