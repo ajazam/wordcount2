@@ -55,6 +55,7 @@ public class WordCountMain {
         log.info("current directory is "+currentdirectory);
 
         if (isMaster) {
+            //TODO start master actor here
             log.info("it's a master. Starting up file reader actor");
             final ActorRef fileReaderActorRef = system.actorOf(
                     Props.create(FileReader.class), "filereader");
