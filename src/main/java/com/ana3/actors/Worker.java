@@ -179,14 +179,15 @@ public class Worker extends AbstractActor {
 
             WorkDone workDone = (WorkDone) o;
 
-            if (!getWorkItems().equals(workDone.getWorkItems())) return false;
-            return getWorkerActorRef().toString().equals(workDone.getWorkerActorRef().toString());
+            if (getWorkItems() != null ? !getWorkItems().equals(workDone.getWorkItems()) : workDone.getWorkItems() != null)
+                return false;
+            return getWorkerActorRef() != null ? getWorkerActorRef().equals(workDone.getWorkerActorRef()) : workDone.getWorkerActorRef() == null;
         }
 
         @Override
         public int hashCode() {
-            int result = getWorkItems().hashCode();
-            result = 31 * result + getWorkerActorRef().hashCode();
+            int result = getWorkItems() != null ? getWorkItems().hashCode() : 0;
+            result = 31 * result + (getWorkerActorRef() != null ? getWorkerActorRef().hashCode() : 0);
             return result;
         }
 
