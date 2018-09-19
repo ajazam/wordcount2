@@ -35,6 +35,28 @@ public class FileReader extends AbstractActor {
         public ActorRef getMasterActorRef() {
             return masterActorRef;
         }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ReadyForBatch that = (ReadyForBatch) o;
+
+            return getMasterActorRef() != null ? getMasterActorRef().equals(that.getMasterActorRef()) : that.getMasterActorRef() == null;
+        }
+
+        @Override
+        public int hashCode() {
+            return getMasterActorRef() != null ? getMasterActorRef().hashCode() : 0;
+        }
+
+        @Override
+        public String toString() {
+            return "ReadyForBatch{" +
+                    "masterActorRef=" + masterActorRef +
+                    '}';
+        }
     }
 
     /**
