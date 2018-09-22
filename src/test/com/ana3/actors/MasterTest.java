@@ -71,6 +71,31 @@ public class MasterTest extends JUnitSuite {
             assertEquals(readyForBatch, messages.get(1));
         }};
     }
+    @Test
+    public void testWorkBatchTimeout(){
+        new TestKit(system) {{
+            final TestKit routerProbeActorRef = new TestKit(system);
+            final TestKit fileReaderProbeActorRef = new TestKit(system);
+
+            final ActorRef masterActerRef = system.actorOf(Master.props(2,
+                    (AbstractActor.ActorContext context) -> {
+                        return fileReaderProbeActorRef.getRef();
+                    },
+                    (AbstractActor.ActorContext context) -> {
+                        return routerProbeActorRef.getRef();
+                    }));
+
+
+            FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActerRef);
+            fileReaderProbeActorRef.expectMsg(readyForBatch);
+
+
+            fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(11), readyForBatch);
+
+            fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(11), readyForBatch);
+
+       }};
+    }
 
     @Test
     public void testHelloTimeOut() {

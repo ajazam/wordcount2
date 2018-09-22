@@ -13,13 +13,14 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Worker extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
     private Cancellable workReceiveTimeOutCancelHandle;
 
-    public static class Hello {
+    public static class Hello implements Serializable {
         private ActorRef masterActorRef;
 
         public Hello(ActorRef masterActorRef) {
@@ -51,7 +52,7 @@ public class Worker extends AbstractActor {
         }
     }
 
-    public static class ReadyForWork {
+    public static class ReadyForWork implements Serializable {
         private ActorRef workerActorRef;
 
         public ReadyForWork(ActorRef workerActorRef) {
@@ -83,7 +84,7 @@ public class Worker extends AbstractActor {
         }
     }
 
-    private static class WorkReceiveTimeout {
+    private static class WorkReceiveTimeout implements Serializable {
         private ActorRef masterActorRef;
 
         public WorkReceiveTimeout(ActorRef masterActorRef) {
@@ -115,7 +116,7 @@ public class Worker extends AbstractActor {
         }
     }
 
-    public static class Work {
+    public static class Work implements Serializable {
         private List<String> workItems;
         private ActorRef masterActorRef;
 
@@ -200,7 +201,7 @@ public class Worker extends AbstractActor {
         }
     }
 
-    public static Props props(){
+    public static Props props() {
 
         return Props.create(Worker.class, () -> new Worker());
     }
@@ -220,34 +221,41 @@ public class Worker extends AbstractActor {
                 .match(Work.class, w -> {
                     processWork(w);
                 })
+                .matchAny(o -> {
+                    log.error("########## --- ########## Worker.receive:: unknown packet " + o);
+                })
+
                 .build();
     }
 
     private void processWork(Work w) {
-        if (workReceiveTimeOutCancelHandle!=null) workReceiveTimeOutCancelHandle.cancel();
+        if (workReceiveTimeOutCancelHandle != null) workReceiveTimeOutCancelHandle.cancel();
         Map<String, Long> wordsAndCounts = WordCounter.count(w.workItems);
-        WorkDone workDone = new WorkDone(wordsAndCounts, getSelf());
+        Master.WorkDone workDone = new Master.WorkDone(wordsAndCounts, getSelf());
         w.getMasterActorRef().tell(workDone, getSelf());
         requestWork(w.getMasterActorRef());
-        log.debug("w.getMasterActorRef() "+w.getMasterActorRef());
+        UUID uuid = UUID.randomUUID();
+        log.info(uuid+" words received are "+w.getWorkItems());
+        log.info(uuid+"---Worker.processWork:: w.getMasterActorRef() || w || wordsandcount   "+w.getMasterActorRef()+" || "+ wordsAndCounts);
     }
 
     private void processWorkReceiveTimeout(WorkReceiveTimeout t) {
         ActorRef masterActorRef = t.getMasterActorRef();
         requestWork(masterActorRef);
+        log.info("---Worker.processWorkReceiveTimeout:: " + t);
     }
 
     private void processHello(Hello h) {
         ActorRef masterActorRef = h.getMasterActorRef();
         requestWork(masterActorRef);
+        log.info("---Worker.processHello:: h" + h);
     }
 
-    private void requestWork(ActorRef masterActorRef){
-        log.debug("masterActorRef in requestWork is "+masterActorRef);
-        ReadyForWork readyForWork = new ReadyForWork(getSelf());
+    private void requestWork(ActorRef masterActorRef) {
+        Master.ReadyForWork readyForWork = new Master.ReadyForWork(getSelf());
         masterActorRef.tell(readyForWork, getSelf());
         workReceiveTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
-                getSelf(), new WorkReceiveTimeout(masterActorRef), getContext().getSystem().getDispatcher(), null);
+                getSelf(), new WorkReceiveTimeout(masterActorRef), getContext().getSystem().getDispatcher(), getSelf());
     }
 
 }

@@ -27,6 +27,6 @@ public class WordCounterTest {
         expectedNamesAndValues.put("hat", 1L);
         expectedNamesAndValues.put("on", 1L);
         assertEquals(expectedNamesAndValues, count);
-
+        System.out.printf("wordcounts are "+expectedNamesAndValues);
     }
 }

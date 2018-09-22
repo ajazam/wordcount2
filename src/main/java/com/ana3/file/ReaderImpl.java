@@ -14,7 +14,7 @@ public class ReaderImpl implements Reader{
         try {
             br = new BufferedReader( new FileReader(new File(filepath)));
         } catch (FileNotFoundException e) {
-
+            e.printStackTrace();
         }
     }
 
@@ -25,6 +25,7 @@ public class ReaderImpl implements Reader{
         try {
             line = br.readLine();
         } catch (IOException e) {
+            e.printStackTrace();
         }
         return line;
     }
@@ -34,6 +35,7 @@ public class ReaderImpl implements Reader{
         try {
             br.close();
         } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

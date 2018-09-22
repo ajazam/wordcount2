@@ -9,6 +9,7 @@ import akka.event.LoggingAdapter;
 import com.ana3.file.Reader;
 import com.ana3.util.MapTools;
 
+import java.io.Serializable;
 import java.util.*;
 
 import static java.util.stream.Collectors.toMap;
@@ -25,7 +26,7 @@ public class FileReader extends AbstractActor {
     /**
      * Message sent to FileReader by master to say it is ready for a batch of work
      */
-    public static class ReadyForBatch {
+    public static class ReadyForBatch implements Serializable {
         private ActorRef masterActorRef;
 
         public ReadyForBatch(ActorRef masterActorRef) {
@@ -62,7 +63,7 @@ public class FileReader extends AbstractActor {
     /**
      * Message sent to master holding work in the form of a list of text lines
      */
-    public static class WorkBatch {
+    public static class WorkBatch implements Serializable{
         private List<String> workItemList = new ArrayList<>();
         private ActorRef fileReaderActorRef;
 
@@ -105,7 +106,7 @@ public class FileReader extends AbstractActor {
     /**
      * Message sent by master holding the results of processing the text lines
      */
-    public static class WorkBatchResults {
+    public static class WorkBatchResults implements Serializable{
         private Map<String, Long> results;
         private ActorRef masterActorRef;
 
@@ -148,7 +149,7 @@ public class FileReader extends AbstractActor {
     /**
      * Request message used during testing to request the current current word count
      */
-    public static class RequestCurrentResults {
+    public static class RequestCurrentResults implements Serializable{
         private ActorRef masterActorRef;
 
         public RequestCurrentResults(ActorRef masterActorRef) {
@@ -183,7 +184,7 @@ public class FileReader extends AbstractActor {
     /**
      * Response message used during testing to hold the current word count
      */
-    public static class ResponseCurrentResults {
+    public static class ResponseCurrentResults implements Serializable{
         private Map<String, Long> results;
         private ActorRef fileReaderActorRef;
 
@@ -223,12 +224,12 @@ public class FileReader extends AbstractActor {
         }
     }
 
-    public static Props props(ActorRef masterActorRef, Reader reader, long workBatchSize){
+    public static Props props(Reader reader, long workBatchSize){
 
-        return Props.create(FileReader.class, () -> new FileReader(masterActorRef, reader, workBatchSize));
+        return Props.create(FileReader.class, () -> new FileReader(reader, workBatchSize));
     }
 
-    public FileReader(ActorRef masterActorRef, Reader reader, long workBatchSize) {
+    public FileReader(Reader reader, long workBatchSize) {
         this.reader = reader;
         this.workBatchSize = workBatchSize;
         this.reader.init();
@@ -236,7 +237,7 @@ public class FileReader extends AbstractActor {
 
     public void showResults(){
         if (currentResult.size()==0) {
-            log.info("There no resuilts to show");
+            log.info("------Filereader.showResults. There no resuilts to show");
             return;
         }
 
@@ -247,7 +248,11 @@ public class FileReader extends AbstractActor {
                 .collect(
                         toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2,
                                 LinkedHashMap::new));
-        log.info("words in descending sorted order." + sortedByCount);
+        log.info("################################################################################################################################################################");
+        log.info("################################################################################################################################################################");
+        log.info("#########################################  Filereader.showResults.  current word count " + sortedByCount);
+        log.info("################################################################################################################################################################");
+        log.info("################################################################################################################################################################");
     }
 
     @Override
@@ -262,12 +267,21 @@ public class FileReader extends AbstractActor {
                 .match(WorkBatchResults.class, wr ->{
                     processMessageWorkBatchResults(wr);
                 })
-                .matchAny(o -> log.info("received unknown message"))
+                .matchAny(o-> {
+                    log.error("########## --- ########## FileReader.receive:: unknown packet "+o);
+                })
+                .matchAny(o -> log.info("------Filereader.receive unknown message"))
                 .build();
     }
 
     private void processMessageWorkBatchResults(WorkBatchResults wr) {
-        currentResult = MapTools.concat(currentResult, wr.results);
+        UUID uuid = UUID.randomUUID();
+        log.info(uuid+"{} ---Filereader.processMessageWorkBatchResults:: work batch results unique words count is {} "+wr.results.keySet().size());
+
+        Map<String, Long> currentResultDup = new HashMap<String, Long>(currentResult);
+        currentResult = MapTools.concat2(currentResultDup, wr.results);
+
+        log.info(uuid+"{} ---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} "+ currentResult.keySet().size());
     }
 
     private void processMessageRequestCurrentResults(RequestCurrentResults r) {
@@ -281,6 +295,7 @@ public class FileReader extends AbstractActor {
 
         while(lineCount<workBatchSize) {
             String currentList = reader.getLine();
+
             if (currentList==null) break;
             lineCount++;
             workBatchLines.add(currentList);
@@ -291,7 +306,8 @@ public class FileReader extends AbstractActor {
             rb.getMasterActorRef().tell(PoisonPill.getInstance(), getSelf());
             getContext().stop(getSelf());
         }
-        WorkBatch workBatch = new WorkBatch(workBatchLines, getSelf());
+        Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, getSelf());
         rb.getMasterActorRef().tell(workBatch, getSelf());
+        log.info("---Filereader.processMessageReadyForBatch:: readyForBatch ");
     }
 }

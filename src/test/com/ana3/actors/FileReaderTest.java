@@ -39,7 +39,7 @@ public class FileReaderTest extends JUnitSuite {
             final TestKit probe = new TestKit(system);
 
             Reader reader = new ReaderDummyImpl();
-            final ActorRef fileReaderActor = system.actorOf(FileReader.props(probe.getRef(), reader, 2), "FileReaderActor");
+            final ActorRef fileReaderActor = system.actorOf(FileReader.props(reader, 2), "FileReaderActor");
 
             List<String> workItemList = new ArrayList();
             FileReader.WorkBatch workBatch;
