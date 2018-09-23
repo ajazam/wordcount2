@@ -3,13 +3,14 @@ package com.ana3.actors;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.routing.Broadcast;
 import com.ana3.util.MapTools;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class Master extends AbstractActor {
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
@@ -17,7 +18,7 @@ public class Master extends AbstractActor {
     private ActorRef routerActorRef;
     private Cancellable workBatchTimeOutCancelHandle;
     private Cancellable helloTimeOutCancelHandle;
-    private List<String> workItemList = new ArrayList<>();
+    LinkedBlockingQueue<String> workItemList = new LinkedBlockingQueue<>();
     private Map<String, Long> wordCount = new HashMap<>();
     private Map<ActorRef, Cancellable> actorWorkTimeOutCancelHandle = new HashMap<>();
     private Map<ActorRef, List<String>> actorsProcessingWorkItems = new HashMap<>();
@@ -279,9 +280,10 @@ public class Master extends AbstractActor {
     }
 
     private void processMessageWorkBatch(WorkBatch wb) {
-        this.workItemList.addAll(wb.workItems);
+        List<String> itemstoAddtoWorkItemList = wb.workItems;
+        this.workItemList.addAll(itemstoAddtoWorkItemList);
 
-        routerActorRef.tell(new Worker.Hello(getSelf()), getSelf());
+        routerActorRef.tell(new Broadcast(new Worker.Hello(getSelf())), getSelf());
 
         helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
@@ -291,7 +293,7 @@ public class Master extends AbstractActor {
     }
 
     private void processMessageHelloTimeOut(HelloTimeOut helloTimeOut) {
-        routerActorRef.tell(new Worker.Hello(getSelf()), getSelf());
+        routerActorRef.tell(new Broadcast(new Worker.Hello(getSelf())), getSelf());
 
         helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
@@ -308,8 +310,8 @@ public class Master extends AbstractActor {
             return;
         }
 
-        List<String> workItemsForWorker = workItemList.stream().limit(lineCountForWorkItem).collect(Collectors.toList());
-        workItemList = workItemList.subList(workItemsForWorker.size(), workItemList.size());
+        List<String> workItemsForWorker = new ArrayList<String>();
+        workItemList.drainTo(workItemsForWorker, lineCountForWorkItem);
 
         rfw.getWorkerActorRef().tell(new Worker.Work(workItemsForWorker, getSelf()), getSelf());
 
@@ -324,7 +326,9 @@ public class Master extends AbstractActor {
     }
 
     private void processMessageWorkerTerminated(Terminated terminated) {
-        workItemList.addAll(actorsProcessingWorkItems.get(terminated.getActor()));
+        List<String> linesToPutBackIntoWorkItemList = actorsProcessingWorkItems.get(terminated.getActor());
+        workItemList.addAll(linesToPutBackIntoWorkItemList);
+
 
         actorWorkTimeOutCancelHandle.remove(terminated.getActor());
 
@@ -332,7 +336,8 @@ public class Master extends AbstractActor {
     }
 
     private void processMessageWorkTimeout(WorkTimeout wto) {
-        workItemList.addAll(actorsProcessingWorkItems.remove(wto.getWorkActorRef()));
+        List<String> itemsToAddToWorkItemList = actorsProcessingWorkItems.remove(wto.getWorkActorRef());
+        workItemList.addAll(itemsToAddToWorkItemList);
 
         log.info("---Master.processMessageWorkTimeout:: "+toString());
     }

@@ -6,7 +6,6 @@ import akka.cluster.routing.ClusterRouterPool;
 import akka.cluster.routing.ClusterRouterPoolSettings;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.japi.Option;
 import akka.routing.BroadcastPool;
 import com.ana3.actors.FileReader;
 import com.ana3.actors.Master;
@@ -91,16 +90,16 @@ public class WordCountMain {
 
             Reader reader = new ReaderImpl(fileCheck.getAbsolutePath());
 
-            final ActorRef fileReaderActorRef = system.actorOf(FileReader.props(reader, 10), "fileReader");
+            final ActorRef fileReaderActorRef = system.actorOf(FileReader.props(reader, 1000), "fileReader");
 
             final SupervisorStrategy routerStrategy = new OneForOneStrategy(60, Duration.ofMinutes(1), Collections.<Class<? extends Throwable>>singletonList(Exception.class));
 
-            final ActorRef master = system.actorOf(Master.props(2,
+            final ActorRef master = system.actorOf(Master.props(50,
                     (AbstractActor.ActorContext context) -> {
                         return fileReaderActorRef;
                     },
                     (AbstractActor.ActorContext context) -> {
-                        return context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 1, false, "worker")).props(Props.create(Worker.class)), "router");
+                        return context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 2, false, "worker")).props(Props.create(Worker.class)), "router");
                     }
 
             ), "master");
