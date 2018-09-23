@@ -2,7 +2,7 @@
 Distributed word count using akka and java 
 Tradeoffs
   * one master, multiple workers.
-  * Master not fault tolerant, graceful recovery from worker failure.
+  * Master not fault tolerant, but graceful recovery from worker failure has been implemented
   * Words read from XML file.
   * Final result will shown in the console / website (time permitting).
 
@@ -44,3 +44,6 @@ A final test of terminating the jar file on one host and restarting the jar file
  
  [Diagram](/message_flows_for_word_count.png) showing message flows between actors. 
     
+ #Improvements and existing issues
+ 
+ Detailed issues and some of the ways to improve the program are stored in the issues section of the repository in github.
