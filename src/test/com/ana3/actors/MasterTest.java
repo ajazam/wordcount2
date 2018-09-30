@@ -181,6 +181,7 @@ public class MasterTest extends JUnitSuite {
                         return routerProbeActorRef.getRef();
                     }));
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActorRef);
+
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
 
             List<String> workBatchLines = new ArrayList<>();
@@ -188,9 +189,11 @@ public class MasterTest extends JUnitSuite {
             workBatchLines.add("four five six");
             workBatchLines.add("seven eight nine");
             workBatchLines.add("ten eleven twelve");
+            workBatchLines.add("thirteen fourteen fifteen");
+            workBatchLines.add("sixteen seventeen eighteen");
             Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, fileReaderProbeActorRef.getRef());
 
-            masterActorRef.tell(workBatch, routerProbeActorRef.getRef());
+            masterActorRef.tell(workBatch, fileReaderProbeActorRef.getRef());
             Worker.Hello hello = new Worker.Hello(masterActorRef);
             routerProbeActorRef.expectMsgEquals(hello);
 
@@ -327,10 +330,6 @@ public class MasterTest extends JUnitSuite {
 
             List<Object> results = fileReaderProbeActorRef.receiveN(2);
             System.out.printf("results are "+results);
-
-
-
-
         }};
     }
 

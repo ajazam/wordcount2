@@ -99,7 +99,7 @@ public class WordCountMain {
                         return fileReaderActorRef;
                     },
                     (AbstractActor.ActorContext context) -> {
-                        return context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 2, false, "worker")).props(Props.create(Worker.class)), "router");
+                        return context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 10, false, "worker")).props(Props.create(Worker.class)), "router");
                     }
 
             ), "master");

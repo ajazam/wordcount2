@@ -4,9 +4,7 @@ import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.actor.PoisonPill;
 import akka.testkit.javadsl.TestKit;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import org.scalatest.junit.JUnitSuite;
 
 import java.time.Duration;
@@ -58,7 +56,7 @@ public class WorkerTest  extends JUnitSuite {
     public void testWork(){
         new TestKit(system) {{
             final TestKit probe = new TestKit(system);
-            final ActorRef workerActor = system.actorOf(Worker.props(), "workerActor");
+            final ActorRef workerActor = system.actorOf(Worker.props(), "workerActor2");
 
             List<String> lines = new ArrayList<>();
             lines.add("the the the");
@@ -69,7 +67,7 @@ public class WorkerTest  extends JUnitSuite {
 
             Map<String, Long> results = new HashMap<>();
             results.put("the", 6L);
-            Worker.WorkDone workDone = new Worker.WorkDone(results, workerActor);
+            Master.WorkDone workDone = new Master.WorkDone(results, workerActor);
 
             probe.expectMsgEquals(Duration.ofSeconds(1), workDone);
 
