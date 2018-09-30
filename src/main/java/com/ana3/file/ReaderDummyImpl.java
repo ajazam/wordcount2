@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ReaderDummyImpl implements Reader{
+public class ReaderDummyImpl implements Reader {
 
     private List<String> list = new ArrayList<>();
     private int currentLine = -1;
@@ -20,9 +20,10 @@ public class ReaderDummyImpl implements Reader{
 
     /**
      * Intialise the class with the contents of a file
+     *
      * @param filePath Location of xml file e.g src/test/resources/dummy.xml
      */
-    ReaderDummyImpl(String filePath){
+    ReaderDummyImpl(String filePath) {
         File file = new File(filePath);
         String absolutePath = file.getAbsolutePath();
         try (Stream<String> stream = Files.lines(Paths.get(absolutePath))) {
@@ -33,7 +34,7 @@ public class ReaderDummyImpl implements Reader{
 
     }
 
-    public ReaderDummyImpl(){
+    public ReaderDummyImpl() {
         this("src/test/resources/dummy.xml");
     }
 
@@ -43,8 +44,8 @@ public class ReaderDummyImpl implements Reader{
 
     @Override
     public String getLine() {
-        currentLine+=1;
-        if (currentLine>=list.size()) {
+        currentLine += 1;
+        if (currentLine >= list.size()) {
             currentLine--;
             return null;
         }

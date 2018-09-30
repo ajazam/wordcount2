@@ -2,7 +2,7 @@ package com.ana3.file;
 
 import java.io.*;
 
-public class ReaderImpl implements Reader{
+public class ReaderImpl implements Reader {
     private String filepath;
     private BufferedReader br;
 
@@ -10,9 +10,9 @@ public class ReaderImpl implements Reader{
         this.filepath = filePath;
     }
 
-    public void init(){
+    public void init() {
         try {
-            br = new BufferedReader( new FileReader(new File(filepath)));
+            br = new BufferedReader(new FileReader(new File(filepath)));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }

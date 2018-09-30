@@ -89,7 +89,7 @@ public class WordCountMain {
             routerStrategy.loggingEnabled();
             system.actorOf(Master.props(50,
                     (AbstractActor.ActorContext context) -> fileReaderActorRef,
-                    (AbstractActor.ActorContext context) -> context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 4, false, "worker")).props(Props.create(Worker.class)), "router")
+                    (AbstractActor.ActorContext context) -> context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy), new ClusterRouterPoolSettings(100, 4, false, "worker")).props(Props.create(Worker.class)), "router")
 
             ), "master");
         } else {

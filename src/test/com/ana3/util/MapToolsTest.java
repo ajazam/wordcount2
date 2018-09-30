@@ -1,6 +1,7 @@
 package com.ana3.util;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ public class MapToolsTest {
 //    }
 
     @Test
-    public void contact2Test1(){
+    public void contact2Test1() {
         Map<String, Long> map1 = new HashMap<>();
         map1.put("red", 1L);
         map1.put("green", 2L);

@@ -13,19 +13,19 @@ public class WordCountMainTest {
     private Config config;
 
     @Before
-    public void setup(){
+    public void setup() {
         main = new WordCountMain();
         ip = "172.16.0.17";
         config = main.getUpdatedAkkaConfig(ip);
     }
 
     @Test
-    public void getNewConfigNettyHostnameTest(){
+    public void getNewConfigNettyHostnameTest() {
         assertEquals("172.16.0.17", config.getString("akka.remote.netty.tcp.hostname"));
     }
 
     @Test
-    public void getNewConfigArteryHostnameTest(){
+    public void getNewConfigArteryHostnameTest() {
         assertEquals("172.16.0.17", config.getString("akka.remote.artery.canonical.hostname"));
     }
 

@@ -64,7 +64,7 @@ public class FileReader extends AbstractActor {
     /**
      * Message sent by master holding the results of processing the text lines
      */
-    public static class WorkBatchResults implements Serializable{
+    public static class WorkBatchResults implements Serializable {
         private Map<String, Long> results;
         private ActorRef masterActorRef;
 
@@ -107,7 +107,7 @@ public class FileReader extends AbstractActor {
     /**
      * Request message used during testing to request the current current word count
      */
-    public static class RequestCurrentResults implements Serializable{
+    public static class RequestCurrentResults implements Serializable {
         private ActorRef masterActorRef;
 
         public RequestCurrentResults(ActorRef masterActorRef) {
@@ -142,7 +142,7 @@ public class FileReader extends AbstractActor {
     /**
      * Response message used during testing to hold the current word count
      */
-    public static class ResponseCurrentResults implements Serializable{
+    public static class ResponseCurrentResults implements Serializable {
         private Map<String, Long> results;
         private ActorRef fileReaderActorRef;
 
@@ -182,7 +182,7 @@ public class FileReader extends AbstractActor {
         }
     }
 
-    public static Props props(Reader reader, long workBatchSize){
+    public static Props props(Reader reader, long workBatchSize) {
 
         return Props.create(FileReader.class, () -> new FileReader(reader, workBatchSize));
     }
@@ -193,8 +193,8 @@ public class FileReader extends AbstractActor {
         this.reader.init();
     }
 
-    private void showResults(){
-        if (currentResult.size()==0) {
+    private void showResults() {
+        if (currentResult.size() == 0) {
             log.debug("------Filereader.showResults. There are no results to show");
             return;
         }
@@ -226,12 +226,12 @@ public class FileReader extends AbstractActor {
 
     private void processMessageWorkBatchResults(WorkBatchResults wr) {
         UUID uuid = UUID.randomUUID();
-        log.debug(uuid+"{} ---Filereader.processMessageWorkBatchResults:: work batch results unique words count is {} "+wr.results.keySet().size());
+        log.debug(uuid + "{} ---Filereader.processMessageWorkBatchResults:: work batch results unique words count is {} ", wr.results.keySet().size());
 
         Map<String, Long> currentResultDup = new HashMap<>(currentResult);
         currentResult = MapTools.concat2(currentResultDup, wr.results);
 
-        log.debug(uuid+"{} ---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} "+ currentResult.keySet().size());
+        log.debug(uuid + "{} ---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} " + currentResult.keySet().size());
     }
 
     private void processMessageRequestCurrentResults(RequestCurrentResults r) {
@@ -244,16 +244,16 @@ public class FileReader extends AbstractActor {
         long lineCount = 0;
 
 
-        while(lineCount<workBatchSize) {
+        while (lineCount < workBatchSize) {
             String currentList = reader.getLine();
 
-            if (currentList==null) break;
+            if (currentList == null) break;
             lineCount++;
             workBatchLines.add(currentList);
             totalLinesRead++;
         }
 
-        if (workBatchLines.size()==0) {
+        if (workBatchLines.size() == 0) {
             showResults();
             rb.getMasterActorRef().tell(PoisonPill.getInstance(), getSelf());
             getContext().stop(getSelf());

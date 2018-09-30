@@ -29,13 +29,13 @@ public class FileReaderTest extends JUnitSuite {
     }
 
     @AfterClass
-    public static void teardown(){
+    public static void teardown() {
         TestKit.shutdownActorSystem(system);
         system = null;
     }
 
     @Test
-    public void testIt(){
+    public void testIt() {
         new TestKit(system) {{
             final TestKit probe = new TestKit(system);
 

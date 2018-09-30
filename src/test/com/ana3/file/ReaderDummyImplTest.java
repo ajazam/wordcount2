@@ -1,6 +1,7 @@
 package com.ana3.file;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.List;
 public class ReaderDummyImplTest {
 
     @Test
-    public void getLineUsingListTest(){
+    public void getLineUsingListTest() {
         List<String> lines = new ArrayList<>();
         lines.add("1");
         lines.add("2");
@@ -22,12 +23,12 @@ public class ReaderDummyImplTest {
     }
 
     @Test
-    public void getLineUsingFileTest(){
+    public void getLineUsingFileTest() {
         ReaderDummyImpl reader = new ReaderDummyImpl("src/test/resources/dummy.xml");
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", reader.getLine());
-         assertEquals("<letter>", reader.getLine());
+        assertEquals("<letter>", reader.getLine());
 
-        for(int i=0; i<3; i++) {
+        for (int i = 0; i < 3; i++) {
             reader.getLine();
         }
 

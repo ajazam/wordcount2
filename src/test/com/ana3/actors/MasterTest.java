@@ -63,8 +63,9 @@ public class MasterTest extends JUnitSuite {
             assertEquals(readyForBatch, messages.get(1));
         }};
     }
+
     @Test
-    public void testWorkBatchTimeout(){
+    public void testWorkBatchTimeout() {
         new TestKit(system) {{
             final TestKit routerProbeActorRef = new TestKit(system);
             final TestKit fileReaderProbeActorRef = new TestKit(system);
@@ -81,7 +82,7 @@ public class MasterTest extends JUnitSuite {
 
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(11), readyForBatch);
 
-       }};
+        }};
     }
 
     @Test
@@ -301,7 +302,7 @@ public class MasterTest extends JUnitSuite {
             masterActorRef.tell(workDone, routerProbeActorRef.getRef());
 
             List<Object> results = fileReaderProbeActorRef.receiveN(2);
-            System.out.print("results are "+results);
+            System.out.print("results are " + results);
         }};
     }
 

@@ -6,11 +6,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import static org.junit.Assert.*;
 
 public class WordCounterTest {
     @Test
-    public void wordCountTest(){
+    public void wordCountTest() {
         List<String> lines = new ArrayList<>();
         lines.add("the cat sat of the mat");
         lines.add("the cat on a hat");
@@ -27,6 +28,6 @@ public class WordCounterTest {
         expectedNamesAndValues.put("hat", 1L);
         expectedNamesAndValues.put("on", 1L);
         assertEquals(expectedNamesAndValues, count);
-        System.out.print("wordcounts are "+expectedNamesAndValues);
+        System.out.print("wordcounts are " + expectedNamesAndValues);
     }
 }

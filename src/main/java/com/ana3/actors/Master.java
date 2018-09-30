@@ -26,7 +26,7 @@ public class Master extends AbstractActor {
     /**
      * Message sent to self to inform that work batch from file reader hasn't been received
      */
-    public static class WorkBatchTimeOut implements Serializable{
+    public static class WorkBatchTimeOut implements Serializable {
         private ActorRef fileReaderActorRef;
 
         public WorkBatchTimeOut(ActorRef fileReaderActorRef) {
@@ -44,7 +44,7 @@ public class Master extends AbstractActor {
     /**
      * Contains work from the file reader
      */
-    public static class WorkBatch implements Serializable{
+    public static class WorkBatch implements Serializable {
         private List<String> workItems;
         private ActorRef fileReaderActorRef;
 
@@ -92,7 +92,7 @@ public class Master extends AbstractActor {
     /**
      * Sent by self to inform that wokers haven't responded with a ReadyForWork message
      */
-    public static class HelloTimeOut implements Serializable{
+    public static class HelloTimeOut implements Serializable {
         public HelloTimeOut() {
         }
 
@@ -101,7 +101,7 @@ public class Master extends AbstractActor {
     /**
      * Sent by worker to notify that it's ready for work
      */
-    public static class ReadyForWork implements Serializable{
+    public static class ReadyForWork implements Serializable {
         private ActorRef workerActorRef;
 
         public ReadyForWork(ActorRef workerActorRef) {
@@ -138,7 +138,7 @@ public class Master extends AbstractActor {
     /**
      * Sent by self to inform a worker has not sent work results
      */
-    public static class WorkTimeout implements Serializable{
+    public static class WorkTimeout implements Serializable {
         private ActorRef workActorRef;
 
         public WorkTimeout(ActorRef workActorRef) {
@@ -160,7 +160,7 @@ public class Master extends AbstractActor {
     /**
      * Send by worker containing work done
      */
-    public static class WorkDone implements Serializable{
+    public static class WorkDone implements Serializable {
         private Map<String, Long> results;
         private ActorRef workerActorRef;
 
@@ -306,7 +306,7 @@ public class Master extends AbstractActor {
 
     private void processMessageWorkTimeout(WorkTimeout wto) {
         List<String> itemsToAddToWorkItemList = actorsProcessingWorkItems.remove(wto.getWorkActorRef());
-        if (itemsToAddToWorkItemList!=null) workItemList.addAll(itemsToAddToWorkItemList);
+        if (itemsToAddToWorkItemList != null) workItemList.addAll(itemsToAddToWorkItemList);
 
         log.debug("---Master.processMessageWorkTimeout:: {}", toString());
     }
@@ -315,10 +315,10 @@ public class Master extends AbstractActor {
         log.debug(toString());
         // drop work done if actor isn't doing work.
         UUID uuid = UUID.randomUUID();
-        log.debug(uuid+"---Master.processMessageWorkDone:: wordcount pre update = {}", wordCount.size());
+        log.debug(uuid + "---Master.processMessageWorkDone:: wordcount pre update = {}", wordCount.size());
         if (!actorsProcessingWorkItems.containsKey(workDone.getWorkerActorRef())) {
-            log.debug(uuid+"---Master.processMessageWorkDone:: workDone dropped actor not in actorsProcessingWorkItems");
-            log.debug(uuid+"---Master.processMessageWorkDone:: self = {} {}", uuid, getSelf());
+            log.debug(uuid + "---Master.processMessageWorkDone:: workDone dropped actor not in actorsProcessingWorkItems");
+            log.debug(uuid + "---Master.processMessageWorkDone:: self = {} {}", uuid, getSelf());
             return;
         }
 
@@ -336,27 +336,27 @@ public class Master extends AbstractActor {
 
             fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
             wordCount.clear();
-            log.debug(uuid+"---Master.processMessageWorkDone:: no more work. word count cleared");
-            log.debug(uuid+"---Master.processMessageWorkDone:: finalBatchWordCount unique word count = {}", finalBatchWordCount.size());
+            log.debug(uuid + "---Master.processMessageWorkDone:: no more work. word count cleared");
+            log.debug(uuid + "---Master.processMessageWorkDone:: finalBatchWordCount unique word count = {}", finalBatchWordCount.size());
         }
 
-        log.debug(uuid+"---Master.processMessageWorkDone:: workdone  words = {}", workDone.getResults().size());
-        log.debug(uuid+"---Master.processMessageWorkDone:: wordcount size postupdate = {}", wordCount.size());
+        log.debug(uuid + "---Master.processMessageWorkDone:: workdone  words = {}", workDone.getResults().size());
+        log.debug(uuid + "---Master.processMessageWorkDone:: wordcount size postupdate = {}", wordCount.size());
     }
 
 
     @Override
     public String toString() {
-        return "Master{" + "\""+
+        return "Master{" + "\"" +
                 //", fileReaderActorRef=" + fileReaderActorRef +  "\""+
                 //", routerActorRef=" + routerActorRef +  "\""+
                 //", workBatchTimeOutCancelHandle=" + workBatchTimeOutCancelHandle +  "\""+
                 //", helloTimeOutCancelHandle=" + helloTimeOutCancelHandle +  "\""+
-                ", workItemList=" + workItemList +  "\""+
-                ", wordCount=" + wordCount +  "\""+
+                ", workItemList=" + workItemList + "\"" +
+                ", wordCount=" + wordCount + "\"" +
                 //", actorWorkTimeOutCancelHandle=" + actorWorkTimeOutCancelHandle +  "\""+
-                ", actorsProcessingWorkItems=" + actorsProcessingWorkItems +  "\""+
-                ", lineCountForWorkItem=" + lineCountForWorkItem + "\""+
+                ", actorsProcessingWorkItems=" + actorsProcessingWorkItems + "\"" +
+                ", lineCountForWorkItem=" + lineCountForWorkItem + "\"" +
                 '}';
 
     }

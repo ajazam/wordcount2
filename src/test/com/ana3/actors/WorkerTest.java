@@ -16,7 +16,7 @@ import java.util.Map;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
-public class WorkerTest  extends JUnitSuite {
+public class WorkerTest extends JUnitSuite {
 
     private static ActorSystem system;
 
@@ -26,13 +26,13 @@ public class WorkerTest  extends JUnitSuite {
     }
 
     @AfterClass
-    public static void teardown(){
+    public static void teardown() {
         TestKit.shutdownActorSystem(system);
         system = null;
     }
 
     @Test
-    public void helloMessageAndWorkReceiveTimeOutTest(){
+    public void helloMessageAndWorkReceiveTimeOutTest() {
         new TestKit(system) {{
             final TestKit probe = new TestKit(system);
             final ActorRef workerActor = system.actorOf(Worker.props(), "workerActor");
@@ -54,7 +54,7 @@ public class WorkerTest  extends JUnitSuite {
     }
 
     @Test
-    public void testWork(){
+    public void testWork() {
         new TestKit(system) {{
             final TestKit probe = new TestKit(system);
             final ActorRef workerActor = system.actorOf(Worker.props(), "workerActor2");
