@@ -31,7 +31,7 @@ word count.
 The latest version of the jar is at the root of the project. I haven't worked out how to create project separate tagged jar files.
 
 
-#Testing
+# Testing
 
 The jar file has been tested with a three node cluster consisting of a ubuntu workstation simulating a master, an imac and macbook pro simulating workers.
 During the run the jar process can be terminated on any of the workers and word count successfully completes.
@@ -40,10 +40,10 @@ A final test of terminating the jar file on one host and restarting the jar file
  the software has been designed to cope with this scenario.
  
  
- #Message Flows
+# Message Flows
  
  [Diagram](/message_flows_for_word_count.png) showing message flows between actors. 
     
- #Improvements and existing issues
+# Improvements and existing issues
  
  Detailed issues and some of the ways to improve the program are stored in the issues section of the repository in github.
