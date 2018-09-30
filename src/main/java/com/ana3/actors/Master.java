@@ -233,7 +233,7 @@ public class Master extends AbstractActor {
                 .match(Terminated.class, this::processMessageWorkerTerminated)
                 .match(WorkTimeout.class, this::processMessageWorkTimeout)
                 .match(WorkDone.class, this::processMessageWorkDone)
-                .matchAny(o -> log.error("########## --- ########## Master.receive:: unknown packet "+o))
+                .matchAny(o -> log.error("########## --- ########## Master.receive:: unknown packet {}", o))
                 .build();
     }
 
@@ -242,7 +242,7 @@ public class Master extends AbstractActor {
                 getSelf(), new Master.WorkBatchTimeOut(fileReaderActorRef), getContext().getSystem().getDispatcher(), getSelf());
 
         fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
-        log.info("---Master.processMessageWorkBatchTimeout:: ");
+        log.debug("---Master.processMessageWorkBatchTimeout:: ");
     }
 
     private void processMessageWorkBatch(WorkBatch wb) {
@@ -254,7 +254,7 @@ public class Master extends AbstractActor {
         helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
 
-        log.info("---Master.processMessageWorkBatch:: {} received "+wb.getWorkItems().size());
+        log.debug("---Master.processMessageWorkBatch:: {} received ", wb.getWorkItems().size());
     }
 
     private void processMessageHelloTimeOut(HelloTimeOut helloTimeOut) {
@@ -263,8 +263,8 @@ public class Master extends AbstractActor {
         helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
 
-        log.info("---Master.processMessageHelloTimeOut:: "+helloTimeOut);
-        log.info("---Master.processMessageHelloTimeOut:: "+getSelf());
+        log.debug("---Master.processMessageHelloTimeOut:: {}", helloTimeOut);
+        log.debug("---Master.processMessageHelloTimeOut:: {}", getSelf());
 
 
     }
@@ -272,8 +272,8 @@ public class Master extends AbstractActor {
     private void processMessageReadyForWork(ReadyForWork rfw) {
         // ignore request if actor is already doing work
         if (actorsProcessingWorkItems.containsKey(rfw.getWorkerActorRef())) {
-            log.info("---Master.processMessageReadyForWork:: ignoring actor. actor in queue "+rfw.getWorkerActorRef());
-            log.info("---Master.processMessageReadyForWork:: "+getSelf());
+            log.debug("---Master.processMessageReadyForWork:: ignoring actor. actor in queue {}", rfw.getWorkerActorRef());
+            log.debug("---Master.processMessageReadyForWork:: {}", getSelf());
             return;
         }
 
@@ -291,7 +291,7 @@ public class Master extends AbstractActor {
 
         actorsProcessingWorkItems.put(rfw.getWorkerActorRef(), workItemsForWorker);
 
-        log.info("---Master.processMessageReadyForWork:: workItems returned to worker "+workItemsForWorker);
+        log.debug("---Master.processMessageReadyForWork:: workItems returned to worker {}", workItemsForWorker);
     }
 
     private void processMessageWorkerTerminated(Terminated terminated) {
@@ -301,24 +301,24 @@ public class Master extends AbstractActor {
 
         actorWorkTimeOutCancelHandle.remove(terminated.getActor());
 
-        log.info("---Master.processMessageWorkerTerminated:: "+toString());
+        log.debug("---Master.processMessageWorkerTerminated:: {}", toString());
     }
 
     private void processMessageWorkTimeout(WorkTimeout wto) {
         List<String> itemsToAddToWorkItemList = actorsProcessingWorkItems.remove(wto.getWorkActorRef());
         if (itemsToAddToWorkItemList!=null) workItemList.addAll(itemsToAddToWorkItemList);
 
-        log.info("---Master.processMessageWorkTimeout:: "+toString());
+        log.debug("---Master.processMessageWorkTimeout:: {}", toString());
     }
 
     private void processMessageWorkDone(WorkDone workDone) {
         log.debug(toString());
         // drop work done if actor isn't doing work.
         UUID uuid = UUID.randomUUID();
-        log.info(uuid+"---Master.processMessageWorkDone:: wordcount pre update= "+ wordCount.size());
+        log.debug(uuid+"---Master.processMessageWorkDone:: wordcount pre update = {}", wordCount.size());
         if (!actorsProcessingWorkItems.containsKey(workDone.getWorkerActorRef())) {
-            log.info(uuid+"---Master.processMessageWorkDone:: workDone dropped actor not in actorsProcessingWorkItems");
-            log.info(uuid+"---Master.processMessageWorkDone:: self = {} {}", uuid, getSelf());
+            log.debug(uuid+"---Master.processMessageWorkDone:: workDone dropped actor not in actorsProcessingWorkItems");
+            log.debug(uuid+"---Master.processMessageWorkDone:: self = {} {}", uuid, getSelf());
             return;
         }
 
@@ -336,12 +336,12 @@ public class Master extends AbstractActor {
 
             fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
             wordCount.clear();
-            log.info(uuid+"---Master.processMessageWorkDone:: no more work. word count cleared");
-            log.info(uuid+"---Master.processMessageWorkDone:: finalBatchWordCount = "+finalBatchWordCount);
+            log.debug(uuid+"---Master.processMessageWorkDone:: no more work. word count cleared");
+            log.debug(uuid+"---Master.processMessageWorkDone:: finalBatchWordCount unique word count = {}", finalBatchWordCount.size());
         }
 
-        log.info(uuid+"---Master.processMessageWorkDone:: workdone  words = {} ",workDone.getResults().size());
-        log.info(uuid+"---Master.processMessageWorkDone:: wordcount size postupdate = "+wordCount.size());
+        log.debug(uuid+"---Master.processMessageWorkDone:: workdone  words = {}", workDone.getResults().size());
+        log.debug(uuid+"---Master.processMessageWorkDone:: wordcount size postupdate = {}", wordCount.size());
     }
 
 

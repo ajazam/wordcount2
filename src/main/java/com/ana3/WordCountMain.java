@@ -61,6 +61,7 @@ public class WordCountMain {
             CompletionStage<Terminated> cs = system.getWhenTerminated();
 
             try {
+                log.info("************************ finished counting words ************************. Press ^C on the master and workers to quit the application. ****************");
                 cs.toCompletableFuture().get();
             } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();

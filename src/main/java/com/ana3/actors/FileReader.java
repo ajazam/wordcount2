@@ -194,7 +194,7 @@ public class FileReader extends AbstractActor {
 
     private void showResults(){
         if (currentResult.size()==0) {
-            log.info("------Filereader.showResults. There no resuilts to show");
+            log.debug("------Filereader.showResults. There are no results to show");
             return;
         }
 
@@ -218,19 +218,19 @@ public class FileReader extends AbstractActor {
                 .match(ReadyForBatch.class, this::processMessageReadyForBatch)
                 .match(RequestCurrentResults.class, this::processMessageRequestCurrentResults)
                 .match(WorkBatchResults.class, this::processMessageWorkBatchResults)
-                .matchAny(o -> log.error("########## --- ########## FileReader.receive:: unknown packet "+o))
-                .matchAny(o -> log.info("------Filereader.receive unknown message"))
+                .matchAny(o -> log.error("########## --- ########## FileReader.receive:: unknown packet {} ", o))
+                .matchAny(o -> log.debug("------Filereader.receive unknown message"))
                 .build();
     }
 
     private void processMessageWorkBatchResults(WorkBatchResults wr) {
         UUID uuid = UUID.randomUUID();
-        log.info(uuid+"{} ---Filereader.processMessageWorkBatchResults:: work batch results unique words count is {} "+wr.results.keySet().size());
+        log.debug(uuid+"{} ---Filereader.processMessageWorkBatchResults:: work batch results unique words count is {} "+wr.results.keySet().size());
 
         Map<String, Long> currentResultDup = new HashMap<>(currentResult);
         currentResult = MapTools.concat2(currentResultDup, wr.results);
 
-        log.info(uuid+"{} ---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} "+ currentResult.keySet().size());
+        log.debug(uuid+"{} ---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} "+ currentResult.keySet().size());
     }
 
     private void processMessageRequestCurrentResults(RequestCurrentResults r) {
@@ -256,10 +256,10 @@ public class FileReader extends AbstractActor {
             getContext().stop(getSelf());
         }
 
-        log.info("---Filereader.processMessageReadyForBatch:: new work batch size is {} lines " + workBatchLines.size());
+        log.debug("---Filereader.processMessageReadyForBatch:: new work batch size is {} lines " + workBatchLines.size());
 
         Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, getSelf());
         rb.getMasterActorRef().tell(workBatch, getSelf());
-        log.info("---Filereader.processMessageReadyForBatch:: readyForBatch ");
+        log.debug("---Filereader.processMessageReadyForBatch:: readyForBatch ");
     }
 }

@@ -139,7 +139,7 @@ public class Worker extends AbstractActor {
                 .match(WorkReceiveTimeout.class, this::processWorkReceiveTimeout)
                 .match(Work.class, this::processWork)
                 .matchAny(o -> {
-                    log.error("########## --- ########## Worker.receive:: unknown packet " + o);
+                    log.error("########## --- ########## Worker.receive:: unknown packet {}", o);
                 })
 
                 .build();
@@ -152,20 +152,20 @@ public class Worker extends AbstractActor {
         w.getMasterActorRef().tell(workDone, getSelf());
         requestWork(w.getMasterActorRef());
         UUID uuid = UUID.randomUUID();
-        log.info(uuid+"---Worker.processWork:: words received are "+w.getWorkItems());
-        log.info(uuid+"---Worker.processWork:: w.getMasterActorRef() || w || wordsandcount   "+w.getMasterActorRef()+" || "+ wordsAndCounts);
+        log.debug(uuid+"---Worker.processWork:: words received are {}", w.getWorkItems());
+        log.debug(uuid+"---Worker.processWork:: w.getMasterActorRef() = {}, wordsandcount  = {}", w.getMasterActorRef(), wordsAndCounts);
     }
 
     private void processWorkReceiveTimeout(WorkReceiveTimeout t) {
         ActorRef masterActorRef = t.getMasterActorRef();
         requestWork(masterActorRef);
-        log.info("---Worker.processWorkReceiveTimeout:: " + t);
+        log.debug("---Worker.processWorkReceiveTimeout:: {}", t);
     }
 
     private void processHello(Hello h) {
         ActorRef masterActorRef = h.getMasterActorRef();
         requestWork(masterActorRef);
-        log.info("---Worker.processHello:: h" + h);
+        log.debug("---Worker.processHello:: {}", h);
     }
 
     private void requestWork(ActorRef masterActorRef) {
