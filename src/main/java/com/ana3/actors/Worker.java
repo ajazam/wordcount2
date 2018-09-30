@@ -156,51 +156,6 @@ public class Worker extends AbstractActor {
         }
     }
 
-    public static class WorkDone implements Serializable {
-        private Map<String, Long> workItems;
-        private ActorRef workerActorRef;
-
-        public WorkDone(Map<String, Long> workItems, ActorRef workerActorRef) {
-            this.workItems = workItems;
-            this.workerActorRef = workerActorRef;
-        }
-
-        public Map<String, Long> getWorkItems() {
-            return workItems;
-        }
-
-        public ActorRef getWorkerActorRef() {
-            return workerActorRef;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            WorkDone workDone = (WorkDone) o;
-
-            if (getWorkItems() != null ? !getWorkItems().equals(workDone.getWorkItems()) : workDone.getWorkItems() != null)
-                return false;
-            return getWorkerActorRef() != null ? getWorkerActorRef().equals(workDone.getWorkerActorRef()) : workDone.getWorkerActorRef() == null;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = getWorkItems() != null ? getWorkItems().hashCode() : 0;
-            result = 31 * result + (getWorkerActorRef() != null ? getWorkerActorRef().hashCode() : 0);
-            return result;
-        }
-
-        @Override
-        public String toString() {
-            return "WorkDone{" +
-                    "workItems=" + workItems +
-                    ", workerActorRef=" + workerActorRef +
-                    '}';
-        }
-    }
-
     public static Props props() {
 
         return Props.create(Worker.class, () -> new Worker());
