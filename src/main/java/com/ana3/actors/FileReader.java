@@ -18,10 +18,9 @@ public class FileReader extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
 
-    private ActorRef masterActorRef;
     private Reader reader;
     private Map<String, Long> currentResult = new HashMap<>();
-    private long workBatchSize = 1000;
+    private long workBatchSize;
 
     /**
      * Message sent to FileReader by master to say it is ready for a batch of work
@@ -33,7 +32,7 @@ public class FileReader extends AbstractActor {
             this.masterActorRef = masterActorRef;
         }
 
-        public ActorRef getMasterActorRef() {
+        ActorRef getMasterActorRef() {
             return masterActorRef;
         }
 
@@ -193,7 +192,7 @@ public class FileReader extends AbstractActor {
         this.reader.init();
     }
 
-    public void showResults(){
+    private void showResults(){
         if (currentResult.size()==0) {
             log.info("------Filereader.showResults. There no resuilts to show");
             return;
@@ -216,18 +215,10 @@ public class FileReader extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(ReadyForBatch.class, rb -> {
-                    processMessageReadyForBatch(rb);
-                })
-                .match(RequestCurrentResults.class, r -> {
-                    processMessageRequestCurrentResults(r);
-                })
-                .match(WorkBatchResults.class, wr ->{
-                    processMessageWorkBatchResults(wr);
-                })
-                .matchAny(o-> {
-                    log.error("########## --- ########## FileReader.receive:: unknown packet "+o);
-                })
+                .match(ReadyForBatch.class, this::processMessageReadyForBatch)
+                .match(RequestCurrentResults.class, this::processMessageRequestCurrentResults)
+                .match(WorkBatchResults.class, this::processMessageWorkBatchResults)
+                .matchAny(o -> log.error("########## --- ########## FileReader.receive:: unknown packet "+o))
                 .matchAny(o -> log.info("------Filereader.receive unknown message"))
                 .build();
     }
@@ -236,7 +227,7 @@ public class FileReader extends AbstractActor {
         UUID uuid = UUID.randomUUID();
         log.info(uuid+"{} ---Filereader.processMessageWorkBatchResults:: work batch results unique words count is {} "+wr.results.keySet().size());
 
-        Map<String, Long> currentResultDup = new HashMap<String, Long>(currentResult);
+        Map<String, Long> currentResultDup = new HashMap<>(currentResult);
         currentResult = MapTools.concat2(currentResultDup, wr.results);
 
         log.info(uuid+"{} ---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} "+ currentResult.keySet().size());

@@ -8,15 +8,15 @@ import org.junit.Test;
 
 public class WordCountMainTest {
 
-    WordCountMain main;
-    String ip;
-    Config config;
+    private WordCountMain main;
+    private String ip;
+    private Config config;
 
     @Before
     public void setup(){
         main = new WordCountMain();
         ip = "172.16.0.17";
-        config = main.getUpdatedAkkaConfig(ip, true);
+        config = main.getUpdatedAkkaConfig(ip);
     }
 
     @Test
@@ -31,6 +31,6 @@ public class WordCountMainTest {
 
     @Test
     public void getNewConfigSeedNodesTest(){
-        assertEquals("akka://WordCountSystem@172.16.0.17:2551", config.getStringList("akka.cluster.seed-nodes").get(0));
+        assertEquals("akka://WordCountSystem@172.16.0.18:2551", config.getStringList("akka.cluster.seed-nodes").get(0));
     }
 }

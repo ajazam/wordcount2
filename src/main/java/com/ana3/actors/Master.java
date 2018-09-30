@@ -17,41 +17,11 @@ public class Master extends AbstractActor {
     private ActorRef routerActorRef;
     private Cancellable workBatchTimeOutCancelHandle;
     private Cancellable helloTimeOutCancelHandle;
-    LinkedBlockingQueue<String> workItemList = new LinkedBlockingQueue<>();
+    private LinkedBlockingQueue<String> workItemList = new LinkedBlockingQueue<>();
     private Map<String, Long> wordCount = new HashMap<>();
     private Map<ActorRef, Cancellable> actorWorkTimeOutCancelHandle = new HashMap<>();
     private Map<ActorRef, List<String>> actorsProcessingWorkItems = new HashMap<>();
-    private int lineCountForWorkItem = 10;
-
-    /**
-     * Sent to master to request the current state. Used for testing
-     */
-    public static class RequestForCurrentState implements Serializable {
-        private ActorRef requestActor;
-
-        public RequestForCurrentState(ActorRef requestActor) {
-            this.requestActor = requestActor;
-        }
-
-        public ActorRef getRequestActor() {
-            return requestActor;
-        }
-    }
-
-    /**
-     * Used to send state to the requester. Used for testing.
-     */
-    public static class ResponseOfCurrentStat implements Serializable{
-        private ActorRef fileReaderActorRef;
-        private ActorRef routerActorRef;
-        private Cancellable workBatchTimeOutCancelHandle;
-        private Cancellable helloTimeOutCancelHandle;
-        private List<String> workItemList = new ArrayList<>();
-        private Map<String, Long> wordCount = new HashMap<>();
-        private Map<ActorRef, Cancellable> actorWorkTimeOutCancelHandle = new HashMap<>();
-        private Map<ActorRef, List<String>> actorsProcessingWorkItems = new HashMap<>();
-        private int lineCountForWorkItem = 10;
-    }
+    private int lineCountForWorkItem;
 
     /**
      * Message sent to self to inform that work batch from file reader hasn't been received
@@ -83,11 +53,11 @@ public class Master extends AbstractActor {
             this.fileReaderActorRef = fileReaderActorRef;
         }
 
-        public List<String> getWorkItems() {
+        List<String> getWorkItems() {
             return workItems;
         }
 
-        public ActorRef getFileReaderActorRef() {
+        ActorRef getFileReaderActorRef() {
             return fileReaderActorRef;
         }
 
@@ -138,7 +108,7 @@ public class Master extends AbstractActor {
             this.workerActorRef = workerActorRef;
         }
 
-        public ActorRef getWorkerActorRef() {
+        ActorRef getWorkerActorRef() {
             return workerActorRef;
         }
 
@@ -175,7 +145,7 @@ public class Master extends AbstractActor {
             this.workActorRef = workActorRef;
         }
 
-        public ActorRef getWorkActorRef() {
+        ActorRef getWorkActorRef() {
             return workActorRef;
         }
 
@@ -194,16 +164,16 @@ public class Master extends AbstractActor {
         private Map<String, Long> results;
         private ActorRef workerActorRef;
 
-        public WorkDone(Map<String, Long> results, ActorRef workerActorRef) {
+        WorkDone(Map<String, Long> results, ActorRef workerActorRef) {
             this.results = results;
             this.workerActorRef = workerActorRef;
         }
 
-        public Map<String, Long> getResults() {
+        Map<String, Long> getResults() {
             return results;
         }
 
-        public ActorRef getWorkerActorRef() {
+        ActorRef getWorkerActorRef() {
             return workerActorRef;
         }
 
@@ -263,9 +233,7 @@ public class Master extends AbstractActor {
                 .match(Terminated.class, this::processMessageWorkerTerminated)
                 .match(WorkTimeout.class, this::processMessageWorkTimeout)
                 .match(WorkDone.class, this::processMessageWorkDone)
-                .matchAny(o ->{
-                    log.error("########## --- ########## Master.receive:: unknown packet "+o);
-                })
+                .matchAny(o -> log.error("########## --- ########## Master.receive:: unknown packet "+o))
                 .build();
     }
 
@@ -275,7 +243,6 @@ public class Master extends AbstractActor {
 
         fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
         log.info("---Master.processMessageWorkBatchTimeout:: ");
-        //log.info("---Master.processMessageWorkBatchTimeout:: "+getSelf());
     }
 
     private void processMessageWorkBatch(WorkBatch wb) {
@@ -289,7 +256,6 @@ public class Master extends AbstractActor {
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
 
         log.info("---Master.processMessageWorkBatch:: "+wb);
-        //log.info("---Master.processMessageWorkBatch:: "+getSelf());
     }
 
     private void processMessageHelloTimeOut(HelloTimeOut helloTimeOut) {
@@ -310,7 +276,7 @@ public class Master extends AbstractActor {
             return;
         }
 
-        List<String> workItemsForWorker = new ArrayList<String>();
+        List<String> workItemsForWorker = new ArrayList<>();
         workItemList.drainTo(workItemsForWorker, lineCountForWorkItem);
 
         rfw.getWorkerActorRef().tell(new Worker.Work(workItemsForWorker, getSelf()), getSelf());
@@ -353,7 +319,7 @@ public class Master extends AbstractActor {
             return;
         }
 
-        Map<String, Long> wordCountDup = new HashMap<String, Long>(wordCount);
+        Map<String, Long> wordCountDup = new HashMap<>(wordCount);
 
         wordCount = MapTools.concat2(wordCountDup, workDone.results);
 

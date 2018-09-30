@@ -27,7 +27,7 @@ public class Worker extends AbstractActor {
             this.masterActorRef = masterActorRef;
         }
 
-        public ActorRef getMasterActorRef() {
+        ActorRef getMasterActorRef() {
             return masterActorRef;
         }
 
@@ -59,7 +59,7 @@ public class Worker extends AbstractActor {
             this.masterActorRef = masterActorRef;
         }
 
-        public ActorRef getMasterActorRef() {
+        ActorRef getMasterActorRef() {
             return masterActorRef;
         }
 
@@ -93,11 +93,11 @@ public class Worker extends AbstractActor {
             this.masterActorRef = masterActorRef;
         }
 
-        public List<String> getWorkItems() {
+        List<String> getWorkItems() {
             return workItems;
         }
 
-        public ActorRef getMasterActorRef() {
+        ActorRef getMasterActorRef() {
             return masterActorRef;
         }
 
@@ -126,7 +126,7 @@ public class Worker extends AbstractActor {
 
     public static Props props() {
 
-        return Props.create(Worker.class, () -> new Worker());
+        return Props.create(Worker.class, Worker::new);
     }
 
     public Worker() {
@@ -135,15 +135,9 @@ public class Worker extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(Hello.class, h -> {
-                    processHello(h);
-                })
-                .match(WorkReceiveTimeout.class, t -> {
-                    processWorkReceiveTimeout(t);
-                })
-                .match(Work.class, w -> {
-                    processWork(w);
-                })
+                .match(Hello.class, this::processHello)
+                .match(WorkReceiveTimeout.class, this::processWorkReceiveTimeout)
+                .match(Work.class, this::processWork)
                 .matchAny(o -> {
                     log.error("########## --- ########## Worker.receive:: unknown packet " + o);
                 })

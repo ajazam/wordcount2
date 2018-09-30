@@ -21,7 +21,7 @@ public class ReaderImplTest {
         }
         assertEquals("</letter>", reader.getLine());
 
-        assertEquals(null, reader.getLine());
+        assertNull(reader.getLine());
 
         reader.close();
     }

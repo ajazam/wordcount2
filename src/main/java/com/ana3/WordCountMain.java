@@ -23,13 +23,12 @@ import java.util.concurrent.ExecutionException;
 
 public class WordCountMain {
 
-    Config getUpdatedAkkaConfig(String hostip, boolean isMaster) {
-        Config config = ConfigFactory.parseString("akka.remote.artery.canonical.hostname=\"" + hostip + "\"\n" +
+    Config getUpdatedAkkaConfig(String hostip) {
+        return ConfigFactory.parseString("akka.remote.artery.canonical.hostname=\"" + hostip + "\"\n" +
                 "akka.remote.netty.tcp.hostname=\"" + hostip + "\"\n").withFallback(ConfigFactory.load());
-        return config;
     }
 
-    public static void logAkkaConfiguratation(LoggingAdapter log, String parameterPath, Config akkaConfiguration) {
+    private static void logAkkaConfiguratation(LoggingAdapter log, String parameterPath, Config akkaConfiguration) {
         log.info(parameterPath + " = " + akkaConfiguration.getString(parameterPath));
     }
 
@@ -39,7 +38,7 @@ public class WordCountMain {
 
         WordCountMain main = new WordCountMain();
 
-        Config akkaConfig = main.getUpdatedAkkaConfig(hostip, isMaster);
+        Config akkaConfig = main.getUpdatedAkkaConfig(hostip);
 
         String currentdirectory = System.getProperty("user.dir");
 
@@ -55,12 +54,7 @@ public class WordCountMain {
         log.info("dump file is " + akkaConfig.getString("file.name"));
         log.info("current directory is " + currentdirectory);
 
-        Cluster.get(system).registerOnMemberUp(new Runnable() {
-            @Override
-            public void run() {
-                startActors(isMaster, fileCheck, system, log);
-            }
-        });
+        Cluster.get(system).registerOnMemberUp(() -> startActors(isMaster, fileCheck, system, log));
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 
@@ -68,9 +62,7 @@ public class WordCountMain {
 
             try {
                 cs.toCompletableFuture().get();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
+            } catch (InterruptedException | ExecutionException e) {
                 e.printStackTrace();
             }
 
@@ -92,15 +84,11 @@ public class WordCountMain {
 
             final ActorRef fileReaderActorRef = system.actorOf(FileReader.props(reader, 1000), "fileReader");
 
-            final SupervisorStrategy routerStrategy = new OneForOneStrategy(60, Duration.ofMinutes(1), Collections.<Class<? extends Throwable>>singletonList(Exception.class));
+            final SupervisorStrategy routerStrategy = new OneForOneStrategy(60, Duration.ofMinutes(1), Collections.singletonList(Exception.class));
 
-            final ActorRef master = system.actorOf(Master.props(50,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderActorRef;
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 10, false, "worker")).props(Props.create(Worker.class)), "router");
-                    }
+            system.actorOf(Master.props(50,
+                    (AbstractActor.ActorContext context) -> fileReaderActorRef,
+                    (AbstractActor.ActorContext context) -> context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 10, false, "worker")).props(Props.create(Worker.class)), "router")
 
             ), "master");
         } else {

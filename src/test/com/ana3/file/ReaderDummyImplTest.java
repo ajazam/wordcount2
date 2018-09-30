@@ -17,8 +17,8 @@ public class ReaderDummyImplTest {
         ReaderDummyImpl reader = new ReaderDummyImpl(lines);
         assertEquals("1", reader.getLine());
         assertEquals("2", reader.getLine());
-        assertEquals(null, reader.getLine());
-        assertEquals(null, reader.getLine());
+        assertNull(reader.getLine());
+        assertNull(reader.getLine());
     }
 
     @Test
@@ -27,11 +27,12 @@ public class ReaderDummyImplTest {
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", reader.getLine());
         assertEquals("", reader.getLine());
         assertEquals("<letter>", reader.getLine());
+
         for(int i=0; i<35;i++) {
             reader.getLine();
         }
-        assertEquals("</letter>", reader.getLine());
 
-        assertEquals(null, reader.getLine());
+        assertEquals("</letter>", reader.getLine());
+        assertNull(reader.getLine());
     }
 }

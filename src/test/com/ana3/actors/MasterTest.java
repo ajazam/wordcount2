@@ -18,7 +18,7 @@ import static junit.framework.TestCase.assertEquals;
 
 public class MasterTest extends JUnitSuite {
 
-    static ActorSystem system;
+    private static ActorSystem system;
 
     @BeforeClass
     public static void setup() {
@@ -37,12 +37,9 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActerRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
+
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActerRef);
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
 
@@ -56,13 +53,8 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActerRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
-
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
 
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActerRef);
             List<Object> messages = fileReaderProbeActorRef.receiveN(2, Duration.ofSeconds(11));
@@ -78,13 +70,8 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActerRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
-
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
 
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActerRef);
             fileReaderProbeActorRef.expectMsg(readyForBatch);
@@ -104,12 +91,9 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActorRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
+
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActorRef);
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
 
@@ -136,12 +120,9 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActorRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
+
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActorRef);
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
 
@@ -174,12 +155,9 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActorRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
+
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActorRef);
 
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
@@ -218,7 +196,7 @@ public class MasterTest extends JUnitSuite {
             workReceived = new Worker.Work(workItems, masterActorRef);
             routerProbeActorRef.expectMsgEquals(workReceived);
         }};
-    };
+    }
 
     @Test
     public void testBatchResults() {
@@ -227,12 +205,9 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActorRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
+
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActorRef);
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
 
@@ -272,7 +247,7 @@ public class MasterTest extends JUnitSuite {
             masterActorRef.tell(workDone, routerProbeActorRef.getRef());
 
             List<Object> results = fileReaderProbeActorRef.receiveN(1);
-            System.out.printf("results are "+results);
+            System.out.print("results are " + results);
         }};
     }
 
@@ -284,12 +259,9 @@ public class MasterTest extends JUnitSuite {
             final TestKit fileReaderProbeActorRef = new TestKit(system);
 
             final ActorRef masterActorRef = system.actorOf(Master.props(2,
-                    (AbstractActor.ActorContext context) -> {
-                        return fileReaderProbeActorRef.getRef();
-                    },
-                    (AbstractActor.ActorContext context) -> {
-                        return routerProbeActorRef.getRef();
-                    }));
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
+
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActorRef);
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
 
@@ -329,7 +301,7 @@ public class MasterTest extends JUnitSuite {
             masterActorRef.tell(workDone, routerProbeActorRef.getRef());
 
             List<Object> results = fileReaderProbeActorRef.receiveN(2);
-            System.out.printf("results are "+results);
+            System.out.print("results are "+results);
         }};
     }
 

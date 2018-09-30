@@ -4,7 +4,7 @@ import java.io.*;
 
 public class ReaderImpl implements Reader{
     private String filepath;
-    BufferedReader br;
+    private BufferedReader br;
 
     public ReaderImpl(String filePath) {
         this.filepath = filePath;

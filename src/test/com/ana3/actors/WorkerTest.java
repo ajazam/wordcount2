@@ -14,10 +14,11 @@ import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 public class WorkerTest  extends JUnitSuite {
 
-    static ActorSystem system;
+    private static ActorSystem system;
 
     @BeforeClass
     public static void setup() {
@@ -45,10 +46,10 @@ public class WorkerTest  extends JUnitSuite {
             workerActor.tell(PoisonPill.getInstance(), getRef());
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignore) {
             }
 
-            assertEquals(true, workerActor.isTerminated());
+            assertTrue(workerActor.isTerminated());
         }};
     }
 
@@ -74,10 +75,10 @@ public class WorkerTest  extends JUnitSuite {
             workerActor.tell(PoisonPill.getInstance(), getRef());
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignore) {
             }
 
-            assertEquals(true, workerActor.isTerminated());
+            assertTrue(workerActor.isTerminated());
         }};
     }
 }

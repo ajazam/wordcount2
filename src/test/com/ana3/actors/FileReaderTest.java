@@ -17,10 +17,11 @@ import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 
 public class FileReaderTest extends JUnitSuite {
 
-    static ActorSystem system;
+    private static ActorSystem system;
 
     @BeforeClass
     public static void setup() {
@@ -41,7 +42,7 @@ public class FileReaderTest extends JUnitSuite {
             Reader reader = new ReaderDummyImpl();
             final ActorRef fileReaderActor = system.actorOf(FileReader.props(reader, 2), "FileReaderActor");
 
-            List<String> workItemList = new ArrayList();
+            List<String> workItemList = new ArrayList<>();
             Master.WorkBatch workBatch;
 
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(probe.getRef());
@@ -60,7 +61,7 @@ public class FileReaderTest extends JUnitSuite {
             workBatch = new Master.WorkBatch(workItemList, fileReaderActor);
             probe.expectMsg(Duration.ofSeconds(2), workBatch);
 
-            Map<String, Long> wordsAndCounts = new HashMap<String, Long>();
+            Map<String, Long> wordsAndCounts = new HashMap<>();
             wordsAndCounts.put("apple", 1L);
             wordsAndCounts.put("orange", 2L);
             wordsAndCounts.put("blackberry", 3L);
@@ -92,9 +93,9 @@ public class FileReaderTest extends JUnitSuite {
             fileReaderActor.tell(readyForBatch, probe.getRef());
             try {
                 Thread.sleep(1000);
-            } catch (InterruptedException e) {
+            } catch (InterruptedException ignore) {
             }
-            assertEquals(true,fileReaderActor.isTerminated());
+            assertTrue(fileReaderActor.isTerminated());
         }};
     }
 }

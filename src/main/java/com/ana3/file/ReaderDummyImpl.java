@@ -14,7 +14,7 @@ public class ReaderDummyImpl implements Reader{
     private List<String> list = new ArrayList<>();
     private int currentLine = -1;
 
-    public ReaderDummyImpl(List<String> list) {
+    ReaderDummyImpl(List<String> list) {
         this.list = list;
     }
 
@@ -22,12 +22,12 @@ public class ReaderDummyImpl implements Reader{
      * Intialise the class with the contents of a file
      * @param filePath Location of xml file e.g src/test/resources/dummy.xml
      */
-    public ReaderDummyImpl(String filePath){
+    ReaderDummyImpl(String filePath){
         File file = new File(filePath);
         String absolutePath = file.getAbsolutePath();
         try (Stream<String> stream = Files.lines(Paths.get(absolutePath))) {
             list = stream.collect(Collectors.toList());
-        } catch (IOException e) {
+        } catch (IOException ignore) {
 
         }
 
