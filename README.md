@@ -13,7 +13,7 @@ To run the wordcount the jar file needs to be stored on the master and worker no
 
 
 To run on the master node type
->java -Dakka.cluster.roles.0=master -Dakka.cluster.seed-nodes.0="akka://WordCountSystem@172.16.0.18:2551" -Dhostip="172.16.0.18" -Dfile.name=README.md -jar wordcount2-assembly-0.1.0-SNAPSHOT.jar -Xss10M
+>java -Dakka.cluster.roles.0=master -Dakka.cluster.seed-nodes.0="akka://WordCountSystem@172.16.0.18:2551" -Dhostip="172.16.0.18" -Dfile.name=README.md -jar wordcount2-assembly-0.1.0-SNAPSHOT.jar
 
 where hostip is the IP of the host the software is running on. The IP in akka://WordCountSystem@172.16.0.18:2551 is the IP of the master.
 
