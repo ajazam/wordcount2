@@ -52,38 +52,6 @@ public class Worker extends AbstractActor {
         }
     }
 
-    public static class ReadyForWork implements Serializable {
-        private ActorRef workerActorRef;
-
-        public ReadyForWork(ActorRef workerActorRef) {
-            this.workerActorRef = workerActorRef;
-        }
-
-        public ActorRef getWorkerActorRef() {
-            return workerActorRef;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            ReadyForWork that = (ReadyForWork) o;
-            return Objects.equals(workerActorRef, that.workerActorRef);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(workerActorRef);
-        }
-
-        @Override
-        public String toString() {
-            return "ReadyForWork{" +
-                    "workerActorRef=" + workerActorRef +
-                    '}';
-        }
-    }
-
     private static class WorkReceiveTimeout implements Serializable {
         private ActorRef masterActorRef;
 

@@ -39,7 +39,7 @@ public class WorkerTest  extends JUnitSuite {
             Worker.Hello hello = new Worker.Hello(probe.getRef());
             workerActor.tell(hello, probe.getRef());
 
-            Worker.ReadyForWork readyForWork = new Worker.ReadyForWork(workerActor);
+            Master.ReadyForWork readyForWork = new Master.ReadyForWork(workerActor);
             probe.expectMsg(Duration.ofSeconds(1), readyForWork);
             probe.expectMsg(Duration.ofSeconds(11), readyForWork);
             workerActor.tell(PoisonPill.getInstance(), getRef());
