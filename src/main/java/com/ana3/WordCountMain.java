@@ -85,10 +85,10 @@ public class WordCountMain {
             final ActorRef fileReaderActorRef = system.actorOf(FileReader.props(reader, 1000), "fileReader");
 
             final SupervisorStrategy routerStrategy = new OneForOneStrategy(60, Duration.ofMinutes(1), Collections.singletonList(Exception.class));
-
+            routerStrategy.loggingEnabled();
             system.actorOf(Master.props(50,
                     (AbstractActor.ActorContext context) -> fileReaderActorRef,
-                    (AbstractActor.ActorContext context) -> context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 10, false, "worker")).props(Props.create(Worker.class)), "router")
+                    (AbstractActor.ActorContext context) -> context.actorOf(new ClusterRouterPool(new BroadcastPool(1).withSupervisorStrategy(routerStrategy),new ClusterRouterPoolSettings(100, 16, false, "worker")).props(Props.create(Worker.class)), "router")
 
             ), "master");
         } else {

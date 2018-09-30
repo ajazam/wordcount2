@@ -255,6 +255,9 @@ public class FileReader extends AbstractActor {
             rb.getMasterActorRef().tell(PoisonPill.getInstance(), getSelf());
             getContext().stop(getSelf());
         }
+
+        log.info("---Filereader.processMessageReadyForBatch:: new work batch size is {} lines " + workBatchLines.size());
+
         Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, getSelf());
         rb.getMasterActorRef().tell(workBatch, getSelf());
         log.info("---Filereader.processMessageReadyForBatch:: readyForBatch ");

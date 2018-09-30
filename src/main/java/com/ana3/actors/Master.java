@@ -249,13 +249,12 @@ public class Master extends AbstractActor {
         List<String> itemstoAddtoWorkItemList = wb.workItems;
         this.workItemList.addAll(itemstoAddtoWorkItemList);
 
-        actorsProcessingWorkItems.clear();
         routerActorRef.tell(new Worker.Hello(getSelf()), getSelf());
 
         helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
 
-        log.info("---Master.processMessageWorkBatch:: "+wb);
+        log.info("---Master.processMessageWorkBatch:: {} received "+wb.getWorkItems().size());
     }
 
     private void processMessageHelloTimeOut(HelloTimeOut helloTimeOut) {
@@ -266,6 +265,8 @@ public class Master extends AbstractActor {
 
         log.info("---Master.processMessageHelloTimeOut:: "+helloTimeOut);
         log.info("---Master.processMessageHelloTimeOut:: "+getSelf());
+
+
     }
 
     private void processMessageReadyForWork(ReadyForWork rfw) {
@@ -284,6 +285,8 @@ public class Master extends AbstractActor {
         Cancellable workTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new WorkTimeout(rfw.getWorkerActorRef()), getContext().getSystem().getDispatcher(), getSelf());
 
+        helloTimeOutCancelHandle.cancel();
+
         actorWorkTimeOutCancelHandle.put(rfw.getWorkerActorRef(), workTimeOutCancelHandle);
 
         actorsProcessingWorkItems.put(rfw.getWorkerActorRef(), workItemsForWorker);
@@ -292,7 +295,7 @@ public class Master extends AbstractActor {
     }
 
     private void processMessageWorkerTerminated(Terminated terminated) {
-        List<String> linesToPutBackIntoWorkItemList = actorsProcessingWorkItems.get(terminated.getActor());
+        List<String> linesToPutBackIntoWorkItemList = actorsProcessingWorkItems.remove(terminated.getActor());
         workItemList.addAll(linesToPutBackIntoWorkItemList);
 
 
@@ -303,7 +306,7 @@ public class Master extends AbstractActor {
 
     private void processMessageWorkTimeout(WorkTimeout wto) {
         List<String> itemsToAddToWorkItemList = actorsProcessingWorkItems.remove(wto.getWorkActorRef());
-        workItemList.addAll(itemsToAddToWorkItemList);
+        if (itemsToAddToWorkItemList!=null) workItemList.addAll(itemsToAddToWorkItemList);
 
         log.info("---Master.processMessageWorkTimeout:: "+toString());
     }
@@ -315,7 +318,7 @@ public class Master extends AbstractActor {
         log.info(uuid+"---Master.processMessageWorkDone:: wordcount pre update= "+ wordCount.size());
         if (!actorsProcessingWorkItems.containsKey(workDone.getWorkerActorRef())) {
             log.info(uuid+"---Master.processMessageWorkDone:: workDone dropped actor not in actorsProcessingWorkItems");
-            log.info(uuid+"---Master.processMessageWorkDone:: self = ", uuid, getSelf());
+            log.info(uuid+"---Master.processMessageWorkDone:: self = {} {}", uuid, getSelf());
             return;
         }
 
@@ -327,7 +330,7 @@ public class Master extends AbstractActor {
 
         actorsProcessingWorkItems.remove(workDone.getWorkerActorRef());
 
-        if ((workItemList.size() == 0) && (actorsProcessingWorkItems.size() == 0)) {
+        if ((workItemList.size() == 0)) {
             final Map<String, Long> finalBatchWordCount = new HashMap<>(wordCount);
             fileReaderActorRef.tell(new FileReader.WorkBatchResults(finalBatchWordCount, getSelf()), getSelf());
 
@@ -337,7 +340,7 @@ public class Master extends AbstractActor {
             log.info(uuid+"---Master.processMessageWorkDone:: finalBatchWordCount = "+finalBatchWordCount);
         }
 
-        log.info(uuid+"---Master.processMessageWorkDone:: workdone  = "+workDone);
+        log.info(uuid+"---Master.processMessageWorkDone:: workdone  words = {} ",workDone.getResults().size());
         log.info(uuid+"---Master.processMessageWorkDone:: wordcount size postupdate = "+wordCount.size());
     }
 
