@@ -29,8 +29,4 @@ public class WordCountMainTest {
         assertEquals("172.16.0.17", config.getString("akka.remote.artery.canonical.hostname"));
     }
 
-    @Test
-    public void getNewConfigSeedNodesTest(){
-        assertEquals("akka://WordCountSystem@172.16.0.18:2551", config.getStringList("akka.cluster.seed-nodes").get(0));
-    }
 }

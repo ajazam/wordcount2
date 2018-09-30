@@ -25,14 +25,13 @@ public class ReaderDummyImplTest {
     public void getLineUsingFileTest(){
         ReaderDummyImpl reader = new ReaderDummyImpl("src/test/resources/dummy.xml");
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>", reader.getLine());
-        assertEquals("", reader.getLine());
-        assertEquals("<letter>", reader.getLine());
+         assertEquals("<letter>", reader.getLine());
 
-        for(int i=0; i<35;i++) {
+        for(int i=0; i<3; i++) {
             reader.getLine();
         }
 
-        assertEquals("</letter>", reader.getLine());
+        assertEquals("        We like your products and think they certainly represent the most powerful translation solution on the market.", reader.getLine());
         assertNull(reader.getLine());
     }
 }
