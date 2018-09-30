@@ -199,16 +199,14 @@ public class FileReader extends AbstractActor {
             return;
         }
 
-        Map<String, Long> sortedByCount = currentResult
-                .entrySet()
-                .stream()
-                .sorted(Collections.reverseOrder(Map.Entry.comparingByValue()))
-                .collect(
-                        toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2,
-                                LinkedHashMap::new));
+        Map<String, Long> sortedWordCount = MapTools.reverseCountSort(currentResult);
+
+        Map.Entry<String, Long> highestWordCount = MapTools.wordWithHighCount(sortedWordCount);
+        Map.Entry<String, Long> lowestWordCount = MapTools.wordWithLowCount(sortedWordCount);
+
         log.info("################################################################################################################################################################");
         log.info("################################################################################################################################################################");
-        log.info("#########################################  Filereader.showResults.  current word count " + sortedByCount);
+        log.info("######################################### Filereader.showResults high count word = {}, count = {}, lowest count word = {}, count {}, ", highestWordCount.getKey(), highestWordCount.getValue(), lowestWordCount.getKey(), lowestWordCount.getValue());
         log.info("################################################################################################################################################################");
         log.info("################################################################################################################################################################");
     }
