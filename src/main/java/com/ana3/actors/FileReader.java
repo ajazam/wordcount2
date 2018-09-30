@@ -60,48 +60,6 @@ public class FileReader extends AbstractActor {
         }
     }
 
-    /**
-     * Message sent to master holding work in the form of a list of text lines
-     */
-    public static class WorkBatch implements Serializable{
-        private List<String> workItemList = new ArrayList<>();
-        private ActorRef fileReaderActorRef;
-
-        public WorkBatch(List<String> workItemList, ActorRef fileReaderActorRef) {
-            this.workItemList = workItemList;
-            this.fileReaderActorRef = fileReaderActorRef;
-        }
-
-        public List<String> getWorkItemList() {
-            return workItemList;
-        }
-
-        public ActorRef getFileReaderActorRef() {
-            return fileReaderActorRef;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            WorkBatch workBatch = (WorkBatch) o;
-            return Objects.equals(workItemList, workBatch.workItemList) &&
-                    Objects.equals(fileReaderActorRef, workBatch.fileReaderActorRef);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(workItemList, fileReaderActorRef);
-        }
-
-        @Override
-        public String toString() {
-            return "WorkBatch{" +
-                    "workItemList=" + workItemList +
-                    ", fileReaderActorRef=" + fileReaderActorRef +
-                    '}';
-        }
-    }
 
     /**
      * Message sent by master holding the results of processing the text lines
