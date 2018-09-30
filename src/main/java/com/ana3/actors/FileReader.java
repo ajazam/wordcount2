@@ -21,6 +21,7 @@ public class FileReader extends AbstractActor {
     private Reader reader;
     private Map<String, Long> currentResult = new HashMap<>();
     private long workBatchSize;
+    private long totalLinesRead = 0;
 
     /**
      * Message sent to FileReader by master to say it is ready for a batch of work
@@ -242,12 +243,14 @@ public class FileReader extends AbstractActor {
         List<String> workBatchLines = new ArrayList<>();
         long lineCount = 0;
 
+
         while(lineCount<workBatchSize) {
             String currentList = reader.getLine();
 
             if (currentList==null) break;
             lineCount++;
             workBatchLines.add(currentList);
+            totalLinesRead++;
         }
 
         if (workBatchLines.size()==0) {
@@ -261,5 +264,6 @@ public class FileReader extends AbstractActor {
         Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, getSelf());
         rb.getMasterActorRef().tell(workBatch, getSelf());
         log.debug("---Filereader.processMessageReadyForBatch:: readyForBatch ");
+        log.info("FileReader.processMessageReadyForBatch:: total lines read {}", totalLinesRead);
     }
 }
