@@ -3,7 +3,6 @@ package com.ana3.actors;
 import akka.actor.*;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
-import akka.routing.Broadcast;
 import com.ana3.util.MapTools;
 
 import java.io.Serializable;
@@ -283,7 +282,8 @@ public class Master extends AbstractActor {
         List<String> itemstoAddtoWorkItemList = wb.workItems;
         this.workItemList.addAll(itemstoAddtoWorkItemList);
 
-        routerActorRef.tell(new Broadcast(new Worker.Hello(getSelf())), getSelf());
+        actorsProcessingWorkItems.clear();
+        routerActorRef.tell(new Worker.Hello(getSelf()), getSelf());
 
         helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
@@ -293,7 +293,7 @@ public class Master extends AbstractActor {
     }
 
     private void processMessageHelloTimeOut(HelloTimeOut helloTimeOut) {
-        routerActorRef.tell(new Broadcast(new Worker.Hello(getSelf())), getSelf());
+        routerActorRef.tell(new Worker.Hello(getSelf()), getSelf());
 
         helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
