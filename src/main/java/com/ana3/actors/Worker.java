@@ -152,7 +152,7 @@ public class Worker extends AbstractActor {
         w.getMasterActorRef().tell(workDone, getSelf());
         requestWork(w.getMasterActorRef());
         UUID uuid = UUID.randomUUID();
-        log.info(uuid+" words received are "+w.getWorkItems());
+        log.info(uuid+"---Worker.processWork:: words received are "+w.getWorkItems());
         log.info(uuid+"---Worker.processWork:: w.getMasterActorRef() || w || wordsandcount   "+w.getMasterActorRef()+" || "+ wordsAndCounts);
     }
 
