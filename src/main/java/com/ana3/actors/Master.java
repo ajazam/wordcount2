@@ -22,6 +22,8 @@ public class Master extends AbstractActor {
     private Map<ActorRef, Cancellable> actorWorkTimeOutCancelHandle = new HashMap<>();
     private Map<ActorRef, List<String>> actorsProcessingWorkItems = new HashMap<>();
     private int lineCountForWorkItem;
+    private boolean waitingForWorkBatch;
+    private boolean sentInitialHello;
 
     /**
      * Message sent to self to inform that work batch from file reader hasn't been received
@@ -213,14 +215,12 @@ public class Master extends AbstractActor {
         this.fileReaderActorRef = fileReaderActorFactory.apply(getContext());
         this.routerActorRef = routerActorFactory.apply(getContext());
         this.lineCountForWorkItem = lineCountForWorkItem;
-    }
 
-    @Override
-    public void preStart() {
-        fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
+        //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        // need the following to tell FileReader actor to send a batch of work after 15 seconds. It'll give the master time to finish starting up. really really important. Lost many days over this.
+        //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-        workBatchTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
-                getSelf(), new Master.WorkBatchTimeOut(fileReaderActorRef), getContext().getSystem().getDispatcher(), getSelf());
+        this.fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
     }
 
     @Override
@@ -229,10 +229,10 @@ public class Master extends AbstractActor {
                 .match(WorkBatchTimeOut.class, this::processMessageWorkBatchTimeout)
                 .match(WorkBatch.class, this::processMessageWorkBatch)
                 .match(HelloTimeOut.class, this::processMessageHelloTimeOut)
+                .match(WorkDone.class, this::processMessageWorkDone)
                 .match(ReadyForWork.class, this::processMessageReadyForWork)
                 .match(Terminated.class, this::processMessageWorkerTerminated)
                 .match(WorkTimeout.class, this::processMessageWorkTimeout)
-                .match(WorkDone.class, this::processMessageWorkDone)
                 .matchAny(o -> log.error("########## --- ########## Master.receive:: unknown packet {}", o))
                 .build();
     }
@@ -242,19 +242,23 @@ public class Master extends AbstractActor {
                 getSelf(), new Master.WorkBatchTimeOut(fileReaderActorRef), getContext().getSystem().getDispatcher(), getSelf());
 
         fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
-        log.debug("---Master.processMessageWorkBatchTimeout:: ");
+        waitingForWorkBatch = false;
+        log.info("---Master.processMessageWorkBatchTimeout:: ");
     }
 
     private void processMessageWorkBatch(WorkBatch wb) {
-        List<String> itemstoAddtoWorkItemList = wb.workItems;
+        List<String> itemstoAddtoWorkItemList = new ArrayList<>(wb.workItems);
+        log.info("---Master.processMessageWorkBatch:: itemlist before new workbatch = {} ", workItemList.size());
         this.workItemList.addAll(itemstoAddtoWorkItemList);
 
-        routerActorRef.tell(new Worker.Hello(getSelf()), getSelf());
-
-        helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
-                getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
-
-        log.debug("---Master.processMessageWorkBatch:: {} received ", wb.getWorkItems().size());
+        if (!sentInitialHello) {
+            sentInitialHello = true;
+            routerActorRef.tell(new Worker.Hello(getSelf()), getSelf());
+            helloTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
+                    getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
+        }
+        waitingForWorkBatch = false;
+        log.info("---Master.processMessageWorkBatch:: {} received ", wb.getWorkItems().size());
     }
 
     private void processMessageHelloTimeOut(HelloTimeOut helloTimeOut) {
@@ -264,51 +268,54 @@ public class Master extends AbstractActor {
                 getSelf(), new Master.HelloTimeOut(), getContext().getSystem().getDispatcher(), getSelf());
 
         log.debug("---Master.processMessageHelloTimeOut:: {}", helloTimeOut);
-        log.debug("---Master.processMessageHelloTimeOut:: {}", getSelf());
-
-
+        log.info("---Master.processMessageHelloTimeOut:: {}", getSelf());
     }
 
     private void processMessageReadyForWork(ReadyForWork rfw) {
-        // ignore request if actor is already doing work
-        if (actorsProcessingWorkItems.containsKey(rfw.getWorkerActorRef())) {
-            log.debug("---Master.processMessageReadyForWork:: ignoring actor. actor in queue {}", rfw.getWorkerActorRef());
-            log.debug("---Master.processMessageReadyForWork:: {}", getSelf());
-            return;
-        }
-
-        List<String> workItemsForWorker = new ArrayList<>();
-        workItemList.drainTo(workItemsForWorker, lineCountForWorkItem);
-
-        rfw.getWorkerActorRef().tell(new Worker.Work(workItemsForWorker, getSelf()), getSelf());
-
-        Cancellable workTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
-                getSelf(), new WorkTimeout(rfw.getWorkerActorRef()), getContext().getSystem().getDispatcher(), getSelf());
 
         helloTimeOutCancelHandle.cancel();
 
-        actorWorkTimeOutCancelHandle.put(rfw.getWorkerActorRef(), workTimeOutCancelHandle);
+        Cancellable actorWorkTimeOuthandle = actorWorkTimeOutCancelHandle.remove(rfw.getWorkerActorRef());
+        if (actorWorkTimeOuthandle != null) {
+            actorWorkTimeOuthandle.cancel();
+        }
 
-        actorsProcessingWorkItems.put(rfw.getWorkerActorRef(), workItemsForWorker);
+        List<String> workItemsForWorker = sendWorkToWorker(rfw.getWorkerActorRef());
 
-        log.debug("---Master.processMessageReadyForWork:: workItems returned to worker {}", workItemsForWorker);
+        log.debug("---Master.processMessageReadyForWork:: workItems returned to worker {}",rfw.getWorkerActorRef());
+    }
+
+    private List<String> sendWorkToWorker(ActorRef workerActorRef) {
+        List<String> workItemsForWorker = new ArrayList<>();
+
+        Cancellable workTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofSeconds(10L),
+                getSelf(), new WorkTimeout(workerActorRef), getContext().getSystem().getDispatcher(), getSelf());
+
+        actorWorkTimeOutCancelHandle.put(workerActorRef, workTimeOutCancelHandle);
+
+        workItemList.drainTo(workItemsForWorker, lineCountForWorkItem);
+        log.debug("---Master.sendWorkToWorker:: Assigned new workItems to {}", workerActorRef);
+
+        workerActorRef.tell(new Worker.Work(workItemsForWorker, getSelf()), getSelf());
+
+        actorsProcessingWorkItems.put(workerActorRef, workItemsForWorker);
+        return workItemsForWorker;
     }
 
     private void processMessageWorkerTerminated(Terminated terminated) {
         List<String> linesToPutBackIntoWorkItemList = actorsProcessingWorkItems.remove(terminated.getActor());
         workItemList.addAll(linesToPutBackIntoWorkItemList);
 
-
         actorWorkTimeOutCancelHandle.remove(terminated.getActor());
 
-        log.debug("---Master.processMessageWorkerTerminated:: {}", toString());
+        log.info("---Master.processMessageWorkerTerminated:: {}", toString());
     }
 
     private void processMessageWorkTimeout(WorkTimeout wto) {
         List<String> itemsToAddToWorkItemList = actorsProcessingWorkItems.remove(wto.getWorkActorRef());
         if (itemsToAddToWorkItemList != null) workItemList.addAll(itemsToAddToWorkItemList);
 
-        log.debug("---Master.processMessageWorkTimeout:: {}", toString());
+        log.info("---Master.processMessageWorkTimeout:: {}", wto.getWorkActorRef());
     }
 
     private void processMessageWorkDone(WorkDone workDone) {
@@ -317,7 +324,7 @@ public class Master extends AbstractActor {
         UUID uuid = UUID.randomUUID();
         log.debug(uuid + "---Master.processMessageWorkDone:: wordcount pre update = {}", wordCount.size());
         if (!actorsProcessingWorkItems.containsKey(workDone.getWorkerActorRef())) {
-            log.debug(uuid + "---Master.processMessageWorkDone:: workDone dropped actor not in actorsProcessingWorkItems");
+            log.info(uuid + "---Master.processMessageWorkDone:: workDone dropped, actor not in actorsProcessingWorkItems");
             log.debug(uuid + "---Master.processMessageWorkDone:: self = {} {}", uuid, getSelf());
             return;
         }
@@ -330,18 +337,22 @@ public class Master extends AbstractActor {
 
         actorsProcessingWorkItems.remove(workDone.getWorkerActorRef());
 
-        if ((workItemList.size() == 0)) {
+        if ((workItemList.size() == 0) && !waitingForWorkBatch) {
             final Map<String, Long> finalBatchWordCount = new HashMap<>(wordCount);
             fileReaderActorRef.tell(new FileReader.WorkBatchResults(finalBatchWordCount, getSelf()), getSelf());
-
-            fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
+            waitingForWorkBatch = true;
+            //TODO remove the following line
+            //fileReaderActorRef.tell(new FileReader.ReadyForBatch(getSelf()), getSelf());
             wordCount.clear();
             log.debug(uuid + "---Master.processMessageWorkDone:: no more work. word count cleared");
             log.debug(uuid + "---Master.processMessageWorkDone:: finalBatchWordCount unique word count = {}", finalBatchWordCount.size());
+        } else {
+            sendWorkToWorker(workDone.getWorkerActorRef());
         }
 
         log.debug(uuid + "---Master.processMessageWorkDone:: workdone  words = {}", workDone.getResults().size());
         log.debug(uuid + "---Master.processMessageWorkDone:: wordcount size postupdate = {}", wordCount.size());
+        //log.info(uuid+ "---Master.processMessageWorkDone:: workItemList = {}", workItemList.size());
     }
 
 

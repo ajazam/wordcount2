@@ -40,7 +40,7 @@ public class FileReaderTest extends JUnitSuite {
             final TestKit probe = new TestKit(system);
 
             Reader reader = new ReaderDummyImpl();
-            final ActorRef fileReaderActor = system.actorOf(FileReader.props(reader, 2), "FileReaderActor");
+            final ActorRef fileReaderActor = system.actorOf(FileReader.props(reader, 2), "FileReaderActor1");
 
             List<String> workItemList = new ArrayList<>();
             Master.WorkBatch workBatch;
@@ -52,9 +52,10 @@ public class FileReaderTest extends JUnitSuite {
             workItemList.add("<letter>");
             workBatch = new Master.WorkBatch(workItemList, fileReaderActor);
             probe.expectMsg(Duration.ofSeconds(2), workBatch);
+            FileReader.WorkBatchResults results1 = new FileReader.WorkBatchResults(new HashMap<>(), probe.getRef());
+            fileReaderActor.tell(results1, probe.getRef());
 
-
-            fileReaderActor.tell(readyForBatch, probe.getRef());
+            //fileReaderActor.tell(readyForBatch, probe.getRef());
             workItemList.clear();
             workItemList.add("    <title maxlength=\"10\"> Quote Letter </title>");
             workItemList.add("    <salutation limit=\"40\">Dear Daniel,</salutation>");
@@ -96,6 +97,83 @@ public class FileReaderTest extends JUnitSuite {
             } catch (InterruptedException ignore) {
             }
             assertTrue(fileReaderActor.isTerminated());
+        }};
+    }
+
+    @Test
+    public void testWorkBatch(){
+        new TestKit(system) {{
+            final TestKit probe = new TestKit(system);
+
+            Reader reader = new ReaderDummyImpl();
+            final ActorRef fileReaderActor = system.actorOf(FileReader.props(reader, 2), "FileReaderActor2");
+
+            List<String> workItemList = new ArrayList<>();
+            Master.WorkBatch workBatch;
+
+            FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(probe.getRef());
+
+            fileReaderActor.tell(readyForBatch, probe.getRef());
+            workItemList.add("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            workItemList.add("<letter>");
+            workBatch = new Master.WorkBatch(workItemList, fileReaderActor);
+            probe.expectMsg(Duration.ofSeconds(1), workBatch);
+
+            FileReader.WorkBatchResults results = new FileReader.WorkBatchResults(new HashMap<>(), probe.getRef());
+            fileReaderActor.tell(results, probe.getRef());
+
+            workItemList.clear();
+            workItemList.add("    <title maxlength=\"10\"> Quote Letter </title>");
+            workItemList.add("    <salutation limit=\"40\">Dear Daniel,</salutation>");
+
+            workBatch = new Master.WorkBatch(workItemList, fileReaderActor);
+            probe.expectMsg(Duration.ofSeconds(1), workBatch);
+
+            results = new FileReader.WorkBatchResults(new HashMap<>(), probe.getRef());
+            fileReaderActor.tell(results, probe.getRef());
+
+            workItemList.clear();
+            workItemList.add("    <text>Thank you f or sending us the information on <emphasis>SDL Trados Studio 2009</emphasis>.");
+            workItemList.add("        We like your products and think they certainly represent the most powerful translation solution on the market.");
+
+            workBatch = new Master.WorkBatch(workItemList, fileReaderActor);
+            probe.expectMsg(Duration.ofSeconds(1), workBatch);
+        }};
+    }
+
+    @Test
+    public void testWorkBatch2(){
+        new TestKit(system) {{
+            final TestKit probe = new TestKit(system);
+
+            Reader reader = new ReaderDummyImpl();
+            final ActorRef fileReaderActor = system.actorOf(FileReader.props(reader, 4), "FileReaderActor3");
+
+            List<String> workItemList = new ArrayList<>();
+            Master.WorkBatch workBatch;
+
+            FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(probe.getRef());
+
+            fileReaderActor.tell(readyForBatch, probe.getRef());
+            workItemList.add("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            workItemList.add("<letter>");
+            workItemList.add("    <title maxlength=\"10\"> Quote Letter </title>");
+            workItemList.add("    <salutation limit=\"40\">Dear Daniel,</salutation>");
+            workBatch = new Master.WorkBatch(workItemList, fileReaderActor);
+            probe.expectMsg(Duration.ofSeconds(1), workBatch);
+
+            FileReader.WorkBatchResults results = new FileReader.WorkBatchResults(new HashMap<>(), probe.getRef());
+            fileReaderActor.tell(results, probe.getRef());
+
+            workItemList.clear();
+            workItemList.add("    <text>Thank you f or sending us the information on <emphasis>SDL Trados Studio 2009</emphasis>.");
+            workItemList.add("        We like your products and think they certainly represent the most powerful translation solution on the market.");
+
+            workBatch = new Master.WorkBatch(workItemList, fileReaderActor);
+            probe.expectMsg(Duration.ofSeconds(1), workBatch);
+
+            probe.expectNoMessage();
+
         }};
     }
 }

@@ -77,7 +77,6 @@ public class MasterTest extends JUnitSuite {
             FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActerRef);
             fileReaderProbeActorRef.expectMsg(readyForBatch);
 
-
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(11), readyForBatch);
 
             fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(11), readyForBatch);
@@ -303,6 +302,43 @@ public class MasterTest extends JUnitSuite {
 
             List<Object> results = fileReaderProbeActorRef.receiveN(2);
             System.out.print("results are " + results);
+        }};
+    }
+
+    @Test
+    public void testReassignedExistingWork(){
+        new TestKit(system) {{
+            final TestKit routerProbeActorRef = new TestKit(system);
+            final TestKit fileReaderProbeActorRef = new TestKit(system);
+
+            final ActorRef masterActorRef = system.actorOf(Master.props(2,
+                    (AbstractActor.ActorContext context) -> fileReaderProbeActorRef.getRef(),
+                    (AbstractActor.ActorContext context) -> routerProbeActorRef.getRef()));
+
+            FileReader.ReadyForBatch readyForBatch = new FileReader.ReadyForBatch(masterActorRef);
+            fileReaderProbeActorRef.expectMsgEquals(Duration.ofSeconds(1), readyForBatch);
+
+            List<String> workBatchLines = new ArrayList<>();
+            workBatchLines.add("one two three");
+            workBatchLines.add("four five six");
+            Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, fileReaderProbeActorRef.getRef());
+
+            masterActorRef.tell(workBatch, routerProbeActorRef.getRef());
+            Worker.Hello hello = new Worker.Hello(masterActorRef);
+            routerProbeActorRef.expectMsgEquals(hello);
+
+            // first request for work
+            Master.ReadyForWork readyForWork = new Master.ReadyForWork(routerProbeActorRef.getRef());
+            masterActorRef.tell(readyForWork, routerProbeActorRef.getRef());
+
+            List<String> workItems = new ArrayList<>();
+            workItems.add("one two three");
+            workItems.add("four five six");
+            Worker.Work workReceived = new Worker.Work(workItems, masterActorRef);
+            routerProbeActorRef.expectMsgEquals(workReceived);
+
+            masterActorRef.tell(readyForWork, routerProbeActorRef.getRef());
+            routerProbeActorRef.expectMsgEquals(workReceived);
         }};
     }
 

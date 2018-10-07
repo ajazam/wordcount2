@@ -12,8 +12,6 @@ import com.ana3.util.MapTools;
 import java.io.Serializable;
 import java.util.*;
 
-import static java.util.stream.Collectors.toMap;
-
 public class FileReader extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
@@ -22,6 +20,10 @@ public class FileReader extends AbstractActor {
     private Map<String, Long> currentResult = new HashMap<>();
     private long workBatchSize;
     private long totalLinesRead = 0;
+    private int receivedBatchresults;
+    private int packetsSentToMaster;
+    private List<String> workBatchLines = new ArrayList<>();
+    private boolean workBatchCurrentlyBeingProcessed = false;
 
     /**
      * Message sent to FileReader by master to say it is ready for a batch of work
@@ -59,7 +61,6 @@ public class FileReader extends AbstractActor {
                     '}';
         }
     }
-
 
     /**
      * Message sent by master holding the results of processing the text lines
@@ -206,6 +207,8 @@ public class FileReader extends AbstractActor {
 
         log.info("################################################################################################################################################################");
         log.info("################################################################################################################################################################");
+        //log.info("################################################# Filereader.showResults currentResults = {}",sortedWordCount);
+        log.info("#######################################################");
         log.info("######################################### Filereader.showResults high count word = {}, count = {}, lowest count word = {}, count {}, ", highestWordCount.getKey(), highestWordCount.getValue(), lowestWordCount.getKey(), lowestWordCount.getValue());
         log.info("################################################################################################################################################################");
         log.info("################################################################################################################################################################");
@@ -214,9 +217,9 @@ public class FileReader extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
+                .match(WorkBatchResults.class, this::processMessageWorkBatchResults)
                 .match(ReadyForBatch.class, this::processMessageReadyForBatch)
                 .match(RequestCurrentResults.class, this::processMessageRequestCurrentResults)
-                .match(WorkBatchResults.class, this::processMessageWorkBatchResults)
                 .matchAny(o -> log.error("########## --- ########## FileReader.receive:: unknown packet {} ", o))
                 .matchAny(o -> log.debug("------Filereader.receive unknown message"))
                 .build();
@@ -226,10 +229,16 @@ public class FileReader extends AbstractActor {
         UUID uuid = UUID.randomUUID();
         log.debug(uuid + "{} ---Filereader.processMessageWorkBatchResults:: work batch results unique words count is {} ", wr.results.keySet().size());
 
+        workBatchCurrentlyBeingProcessed = false;
+
         Map<String, Long> currentResultDup = new HashMap<>(currentResult);
         currentResult = MapTools.concat2(currentResultDup, wr.results);
+        receivedBatchresults++;
+        log.debug(uuid + "---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} ",currentResult.keySet().size());
+        log.info(uuid + "---Filereader.processMessageWorkBatchResults:: cumulative receivedBatchResultsPackets {}", receivedBatchresults);
 
-        log.debug(uuid + "{} ---Filereader.processMessageWorkBatchResults:: current cumulative unique word count is {} " + currentResult.keySet().size());
+        sendBatchToMaster(wr.getMasterActorRef());
+        log.info("FileReader.processMessageWorkBatchResults:: from {}", wr.getMasterActorRef());
     }
 
     private void processMessageRequestCurrentResults(RequestCurrentResults r) {
@@ -238,9 +247,19 @@ public class FileReader extends AbstractActor {
     }
 
     private void processMessageReadyForBatch(ReadyForBatch rb) {
-        List<String> workBatchLines = new ArrayList<>();
-        long lineCount = 0;
+        if (workBatchCurrentlyBeingProcessed){
+            Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, getSelf());
+            rb.getMasterActorRef().tell(workBatch, getSelf());
+            return;
+        }
 
+        sendBatchToMaster(rb.masterActorRef);
+        log.info("FileReader.processMessageReadyForBatch:: from {}", rb.getMasterActorRef());
+    }
+
+    private void sendBatchToMaster(ActorRef masterActorRef){
+        long lineCount = 0;
+        workBatchLines.clear();
 
         while (lineCount < workBatchSize) {
             String currentList = reader.getLine();
@@ -253,15 +272,21 @@ public class FileReader extends AbstractActor {
 
         if (workBatchLines.size() == 0) {
             showResults();
-            rb.getMasterActorRef().tell(PoisonPill.getInstance(), getSelf());
+            masterActorRef.tell(PoisonPill.getInstance(), getSelf());
             getContext().stop(getSelf());
+            return;
         }
 
-        log.debug("---Filereader.processMessageReadyForBatch:: new work batch size is {} lines " + workBatchLines.size());
+        workBatchCurrentlyBeingProcessed = true;
+
+        packetsSentToMaster++;
+
+        log.debug("---Filereader.sendBatchToMaster:: new work batch size is {} lines " + workBatchLines.size());
 
         Master.WorkBatch workBatch = new Master.WorkBatch(workBatchLines, getSelf());
-        rb.getMasterActorRef().tell(workBatch, getSelf());
-        log.debug("---Filereader.processMessageReadyForBatch:: readyForBatch ");
-        log.info("FileReader.processMessageReadyForBatch:: total lines read {}", totalLinesRead);
+        masterActorRef.tell(workBatch, getSelf());
+        log.debug("---Filereader.sendBatchToMaster:: readyForBatch ");
+        log.info("---FileReader.sendBatchToMaster:: total lines read {}", totalLinesRead);
+        log.info("---FileReader.sendBatchToMaster:: cumulative packets sent to master {}", packetsSentToMaster);
     }
 }

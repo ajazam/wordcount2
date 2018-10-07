@@ -19,6 +19,7 @@ public class Worker extends AbstractActor {
 
     private final LoggingAdapter log = Logging.getLogger(getContext().getSystem(), this);
     private Cancellable workReceiveTimeOutCancelHandle;
+    private int linesReceived = 0;
 
     public static class Hello implements Serializable {
         private ActorRef masterActorRef;
@@ -147,11 +148,16 @@ public class Worker extends AbstractActor {
 
     private void processWork(Work w) {
         if (workReceiveTimeOutCancelHandle != null) workReceiveTimeOutCancelHandle.cancel();
-        Map<String, Long> wordsAndCounts = WordCounter.count(w.workItems);
+        Map<String, Long> wordsAndCounts = WordCounter.count(w.getWorkItems());
         Master.WorkDone workDone = new Master.WorkDone(wordsAndCounts, getSelf());
         w.getMasterActorRef().tell(workDone, getSelf());
-        requestWork(w.getMasterActorRef());
+
+        workReceiveTimeOutCancelHandle = getContext().getSystem().scheduler().scheduleOnce(Duration.ofMillis(100L),
+                getSelf(), new WorkReceiveTimeout(w.getMasterActorRef()), getContext().getSystem().getDispatcher(), getSelf());
+
         UUID uuid = UUID.randomUUID();
+        linesReceived+= w.getWorkItems().size();
+        log.info(uuid + "---Worker.processWork({}):: lines = {}, cumulative lines = {}", getSelf(), w.getWorkItems().size(), linesReceived);
         log.debug(uuid + "---Worker.processWork:: words received are {}", w.getWorkItems());
         log.debug(uuid + "---Worker.processWork:: w.getMasterActorRef() = {}, wordsandcount  = {}", w.getMasterActorRef(), wordsAndCounts);
     }
@@ -159,13 +165,13 @@ public class Worker extends AbstractActor {
     private void processWorkReceiveTimeout(WorkReceiveTimeout t) {
         ActorRef masterActorRef = t.getMasterActorRef();
         requestWork(masterActorRef);
-        log.debug("---Worker.processWorkReceiveTimeout:: {}", t);
+        log.info("---Worker.processWorkReceiveTimeout:: {}", getSelf());
     }
 
     private void processHello(Hello h) {
         ActorRef masterActorRef = h.getMasterActorRef();
         requestWork(masterActorRef);
-        log.debug("---Worker.processHello:: {}", h);
+        log.info("---Worker.processHello:: {}", getSelf());
     }
 
     private void requestWork(ActorRef masterActorRef) {
